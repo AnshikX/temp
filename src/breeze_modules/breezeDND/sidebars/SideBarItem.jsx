@@ -5,6 +5,7 @@ import "../styles.css";
 import upArrow from "../assets/svgs/up-arrow.svg";
 import downArrow from "../assets/svgs/down-arrow.svg";
 import { generateIdFromTemplate } from "../utils/generateIds";
+import tableSvg from "../assets/svgs/table.svg";
 
 const SideBarItem = ({ sidebarItems, theme }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,7 +18,6 @@ const SideBarItem = ({ sidebarItems, theme }) => {
     third_party: false,
     widgets: true,
   });
-  console.log(sidebarItems);
   const toggleSection = (section) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -86,10 +86,10 @@ const SideBarItem = ({ sidebarItems, theme }) => {
     const [name] = libName.split("@");
     if (!name || name.length === 0) return libName;
     return name[0].toUpperCase() + name.slice(1);
-  };
+  };console.log(libComponents)
 
   return (
-    <div className={`brDnd-sidebar ${theme === "dark" ? "dark" : "light"}`}>
+    <div className={`brDnd-sidebar ${theme === "dark" ? "dark" : "light"} hide-scrollbar`}>
       <div className="brDnd-search-container mb-2">
         <input
           type="text"
@@ -122,7 +122,7 @@ const SideBarItem = ({ sidebarItems, theme }) => {
       <div className="mb-2 mt-3">
         <span
           onClick={() => toggleSection("third_party")}
-          className="brDnd-section-title"
+          className={`brDnd-section-title ${theme === "dark" ? "dark" : "light"}`}
         >
           Third Party
           {openSections.third_party ? (
@@ -155,37 +155,45 @@ const SideBarItem = ({ sidebarItems, theme }) => {
                         <>
                           {libComponents[libName].mostUsed?.length > 0 && (
                             <>
-                              <div className="font-semibold text-sm">
-                                Most Used (
-                                {libComponents[libName].mostUsed.length})
+                              <div className="font-semibold text-sm d-flex justify-content-between">
+                                <span> Most Used</span>
+                                <span className="pill">
+                                  {libComponents[libName].mostUsed.length}
+                                </span>
                               </div>
-                              {libComponents[libName].mostUsed.map(
-                                (item, idx) => (
-                                  <DraggableItem
-                                    key={`most-${idx}`}
-                                    data={item}
-                                    theme={theme}
-                                  />
-                                )
-                              )}
+                              <div className="brDnd-cardGrid">
+                                {libComponents[libName].mostUsed.map(
+                                  (item, idx) => (
+                                    <DraggableItem
+                                      key={`most-${idx}`}
+                                      data={{ ...item, type: "third_party" }}
+                                      theme={theme}
+                                    />
+                                  )
+                                )}
+                              </div>
                             </>
                           )}
 
                           {libComponents[libName].allComponents?.length > 0 && (
                             <>
-                              <div className="font-semibold text-sm mt-3">
-                                All Components (
-                                {libComponents[libName].allComponents.length})
+                              <div className="font-semibold text-sm mt-3 d-flex justify-content-between">
+                                <span> All Components</span>
+                                <span className="pill">
+                                  {libComponents[libName].allComponents.length}
+                                </span>
                               </div>
-                              {libComponents[libName].allComponents.map(
-                                (item, idx) => (
-                                  <DraggableItem
-                                    key={`all-${idx}`}
-                                    data={item}
-                                    theme={theme}
-                                  />
-                                )
-                              )}
+                              <div className="brDnd-cardGrid">
+                                {libComponents[libName].allComponents.map(
+                                  (item, idx) => (
+                                    <DraggableItem
+                                      key={`all-${idx}`}
+                                      data={{...item, type: "third_party" }}
+                                      theme={theme}
+                                    />
+                                  )
+                                )}
+                              </div>
                             </>
                           )}
                         </>
@@ -219,7 +227,7 @@ const SideBarItem = ({ sidebarItems, theme }) => {
 
 const SidebarSection = ({ title, open, toggle, items, theme }) => (
   <div className="mb-2 mt-3">
-    <span onClick={toggle} className="brDnd-section-title">
+    <span onClick={toggle} className={`brDnd-section-title ${theme === "dark" ? "dark" : "light"}`}>
       {title}
       {open ? (
         <img src={upArrow} alt="expand" />
@@ -230,9 +238,11 @@ const SidebarSection = ({ title, open, toggle, items, theme }) => (
     {open && (
       <div className="brDnd-section-content">
         {items.length > 0 ? (
-          items.map((item, index) => (
-            <DraggableItem key={index} data={item} theme={theme} />
-          ))
+          <div className="brDnd-cardGrid">
+            {items.map((item, index) => (
+              <DraggableItem key={index} data={item} theme={theme} />
+            ))}
+          </div>
         ) : (
           <div className="fst-italic fs-6">No results</div>
         )}
@@ -255,16 +265,40 @@ const DraggableItem = ({ data, theme }) => {
     [data]
   );
 
-  return (
-    <div
-      className={`brDnd-sideBarItem ${theme === "dark" ? "dark" : "light"}`}
-      ref={drag}
-      style={{ opacity }}
-    >
-      {data.label}
-    </div>
-  );
+  // const isCard = data.type === "third_party";
+
+  const safeLabel =
+    typeof data.label === "string" || typeof data.label === "number"
+      ? data.label
+      :
+        data.tagname || "[Unknown Component]";
+
+  // if (isCard) {
+    return (
+      <div className={`brDnd-cardItem ${theme}`} ref={drag} style={{ opacity }}>
+        <div className="brDnd-cardImageWrapper">
+          <img
+            src={data.image || tableSvg}
+            alt={safeLabel}
+            className="brDnd-cardImage"
+          />
+        </div>
+        <div className="brDnd-cardLabel">{safeLabel}</div>
+      </div>
+    );
+  // }
+
+  // return (
+  //   <div
+  //     className={`brDnd-sideBarItem ${theme === "dark" ? "dark" : "light"}`}
+  //     ref={drag}
+  //     style={{ opacity }}
+  //   >
+  //     {safeLabel}
+  //   </div>
+  // );
 };
+
 
 DraggableItem.propTypes = {
   data: PropTypes.object.isRequired,

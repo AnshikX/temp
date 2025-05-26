@@ -13,7 +13,6 @@
 }
 
 .brDnd-sidebar.dark,
-.brDnd-section-title.dark,
 .brDnd-search-bar.dark {
   background: #1e1f1c;
   color: #a5a5a4;
@@ -74,10 +73,24 @@
 }
 
 .brDnd-section-title {
-  cursor: pointer;
   display: flex;
-  font-size: 16px;
   justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  padding: 5px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.brDnd-section-title.dark{
+  background: rgba(165, 165, 164, 0.2);
+}
+
+.brDnd-section-title.light{
+  background: rgb(104, 104, 100);
 }
 
 .brDnd-section-content {
@@ -85,6 +98,41 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+
+
+.brDnd-section-tile {
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+}
+
+.brDnd-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.brDnd-section-body {
+  padding: 1rem;
+  border-top: 1px solid #eaeaea;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.brDnd-lib-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  margin-top: 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
 }
 
 .brDnd-width-15 {
@@ -204,14 +252,18 @@
   width: 2px;
   height: 2px;
   background: #a5a5a4;
-  display: none;
 }
 
+.hide-scrollbar::-webkit-scrollbar{
+  display: none;
+}
 /* Search Bar Container */
 .brDnd-search-container {
-  /* padding: 6px; */
   width: 100%;
-  /* position: fixed; */
+  position: sticky;
+  top: 0;
+  background: inherit;
+  z-index: 10;
 }
 
 /* Search Input Field */
@@ -245,4 +297,63 @@
   left: -8px;
   width: 16px;
   height: 100%;
+}
+
+.pill {
+  background-color: var(--pill-bg, #a5a5a4);
+  color: var(--pill-color, #333);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-block;
+  min-width: 20px;
+  text-align: center;
+}
+
+.brDnd-cardItem {
+  width: 100%;
+  max-width: 100px;
+  max-height: 100px;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+  cursor: grab;
+}
+
+.brDnd-cardItem:hover {
+  transform: scale(1.05);
+}
+
+.brDnd-cardImageWrapper {
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.brDnd-cardImage {
+  max-width: 100%;
+  max-height: 60px;
+  object-fit: contain;
+}
+
+.brDnd-cardLabel {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  word-break: break-word;
+}
+
+.brDnd-cardGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 8px;
+  height: auto;
+  max-height: 525px;
+  overflow: auto;
 }
