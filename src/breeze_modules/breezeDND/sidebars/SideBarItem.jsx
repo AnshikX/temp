@@ -1,11 +1,15 @@
-import { useCallback, useState, useEffect } from "react";
-import { useDrag } from "react-dnd";
+import { useState, useEffect, useRef, useMemo } from "react";
 import PropTypes from "prop-types";
 import "../styles.css";
 import upArrow from "../assets/svgs/up-arrow.svg";
 import downArrow from "../assets/svgs/down-arrow.svg";
-import { generateIdFromTemplate } from "../utils/generateIds";
-import tableSvg from "../assets/svgs/table.svg";
+import { DraggableItem } from "./DraggableItem";
+import { SidebarSection } from "./SidebarSection";
+const filterItems = (items, searchQuery) => {
+  return items.filter((item) =>
+    item.label?.toLowerCase().includes(searchQuery?.toLowerCase())
+  );
+};
 
 const SideBarItem = ({ sidebarItems, theme }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,6 +22,69 @@ const SideBarItem = ({ sidebarItems, theme }) => {
     third_party: false,
     widgets: true,
   });
+
+  const filteredHtmlItems = useMemo(
+    () => filterItems(sidebarItems.htmlItems, searchQuery),
+    [sidebarItems.htmlItems, searchQuery]
+  );
+  const filteredComponents = useMemo(
+    () => filterItems(sidebarItems.components, searchQuery),
+    [sidebarItems.components, searchQuery]
+  );
+  const filteredWidgets = useMemo(
+    () => filterItems(sidebarItems.widgets, searchQuery),
+    [sidebarItems.widgets, searchQuery]
+  );
+
+  const filteredLibs = useMemo(() => {
+    if (searchQuery.trim() === "") return sidebarItems.third_party;
+    return sidebarItems.third_party.filter((libName) => {
+      const components = libComponents[libName];
+      if (!components) return false;
+
+      const allLabels = [
+        ...(components?.mostUsed || []),
+        ...(components?.allComponents || []),
+      ];
+
+      return allLabels.some((comp) =>
+        comp.label?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    });
+  }, [sidebarItems.third_party, libComponents, searchQuery]);
+
+  const lenghts = useRef({
+    html: filteredHtmlItems.length,
+    components: filteredComponents.length,
+    third_party: filteredLibs.length,
+    widgets: filteredWidgets.length,
+  });
+
+  useEffect(() => {
+    lenghts.current = {
+      html: filteredHtmlItems.length,
+      components: filteredComponents.length,
+      third_party: filteredLibs.length,
+      widgets: filteredWidgets.length,
+    };
+  }, [filteredHtmlItems, filteredComponents, filteredLibs, filteredWidgets]);
+
+  const formatLibName = (libName) => {
+    if (!libName) return "";
+
+    // Remove version (@latest, @5.0.0, etc.)
+    const [nameWithScope] = libName.split("@").filter(Boolean); // skip empty string before @
+
+    // Handle scoped packages like @mui/private-theming
+    const parts = nameWithScope.split("/");
+    const first = parts[0];
+    const rest = parts.slice(1).join("/");
+
+    const formattedFirst = first.charAt(0).toUpperCase() + first.slice(1);
+
+    return rest ? `${formattedFirst}/${rest}` : formattedFirst;
+  };
+
   const toggleSection = (section) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -42,12 +109,6 @@ const SideBarItem = ({ sidebarItems, theme }) => {
     }
   };
 
-  const filterItems = (items) => {
-    return items.filter((item) =>
-      item.label?.toLowerCase().includes(searchQuery?.toLowerCase())
-    );
-  };
-
   useEffect(() => {
     const handleMessage = (event) => {
       if (event.data?.source === "BREEZE") {
@@ -66,7 +127,6 @@ const SideBarItem = ({ sidebarItems, theme }) => {
             ...grouped,
           }));
         }
-        console.log(libComponents, "libComponents");
       }
     };
 
@@ -74,22 +134,30 @@ const SideBarItem = ({ sidebarItems, theme }) => {
     return () => window.removeEventListener("message", handleMessage);
   }, [libComponents]);
 
-  const filteredHtmlItems = filterItems(sidebarItems.htmlItems);
-  const filteredComponents = filterItems(sidebarItems.components);
-  const filteredWidgets = filterItems(sidebarItems.widgets);
-  const filteredLibs = sidebarItems.third_party.filter((lib) =>
-    lib.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const shouldOpen = {};
 
-  const formatLibName = (libName) => {
-    if (!libName) return "";
-    const [name] = libName.split("@");
-    if (!name || name.length === 0) return libName;
-    return name[0].toUpperCase() + name.slice(1);
-  };console.log(libComponents)
+    if (searchQuery.trim() !== "") {
+      if (lenghts.current.html > 0) shouldOpen.html = true;
+      if (lenghts.current.components > 0) shouldOpen.components = true;
+      if (lenghts.current.widgets > 0) shouldOpen.widgets = true;
+      if (lenghts.current.third_party > 0) shouldOpen.third_party = true;
+    }
+
+    if (Object.keys(shouldOpen).length > 0) {
+      setOpenSections((prev) => ({
+        ...prev,
+        ...shouldOpen,
+      }));
+    }
+  }, [searchQuery]);
 
   return (
-    <div className={`brDnd-sidebar ${theme === "dark" ? "dark" : "light"} hide-scrollbar`}>
+    <div
+      className={`brDnd-sidebar ${
+        theme === "dark" ? "dark" : "light"
+      } hide-scrollbar`}
+    >
       <div className="brDnd-search-container mb-2">
         <input
           type="text"
@@ -122,7 +190,9 @@ const SideBarItem = ({ sidebarItems, theme }) => {
       <div className="mb-2 mt-3">
         <span
           onClick={() => toggleSection("third_party")}
-          className={`brDnd-section-title ${theme === "dark" ? "dark" : "light"}`}
+          className={`brDnd-section-title ${
+            theme === "dark" ? "dark" : "light"
+          }`}
         >
           Third Party
           {openSections.third_party ? (
@@ -162,15 +232,19 @@ const SideBarItem = ({ sidebarItems, theme }) => {
                                 </span>
                               </div>
                               <div className="brDnd-cardGrid">
-                                {libComponents[libName].mostUsed.map(
-                                  (item, idx) => (
+                                {libComponents[libName].mostUsed
+                                  .filter((item) =>
+                                    item.label
+                                      ?.toLowerCase()
+                                      .includes(searchQuery.toLowerCase())
+                                  )
+                                  .map((item, idx) => (
                                     <DraggableItem
                                       key={`most-${idx}`}
                                       data={{ ...item, type: "third_party" }}
                                       theme={theme}
                                     />
-                                  )
-                                )}
+                                  ))}
                               </div>
                             </>
                           )}
@@ -184,15 +258,19 @@ const SideBarItem = ({ sidebarItems, theme }) => {
                                 </span>
                               </div>
                               <div className="brDnd-cardGrid">
-                                {libComponents[libName].allComponents.map(
-                                  (item, idx) => (
+                                {libComponents[libName].allComponents
+                                  .filter((item) =>
+                                    item.label
+                                      ?.toLowerCase()
+                                      .includes(searchQuery.toLowerCase())
+                                  )
+                                  .map((item, idx) => (
                                     <DraggableItem
                                       key={`all-${idx}`}
-                                      data={{...item, type: "third_party" }}
+                                      data={{ ...item, type: "third_party" }}
                                       theme={theme}
                                     />
-                                  )
-                                )}
+                                  ))}
                               </div>
                             </>
                           )}
@@ -223,94 +301,6 @@ const SideBarItem = ({ sidebarItems, theme }) => {
       />
     </div>
   );
-};
-
-const SidebarSection = ({ title, open, toggle, items, theme }) => (
-  <div className="mb-2 mt-3">
-    <span onClick={toggle} className={`brDnd-section-title ${theme === "dark" ? "dark" : "light"}`}>
-      {title}
-      {open ? (
-        <img src={upArrow} alt="expand" />
-      ) : (
-        <img src={downArrow} alt="collapse" />
-      )}
-    </span>
-    {open && (
-      <div className="brDnd-section-content">
-        {items.length > 0 ? (
-          <div className="brDnd-cardGrid">
-            {items.map((item, index) => (
-              <DraggableItem key={index} data={item} theme={theme} />
-            ))}
-          </div>
-        ) : (
-          <div className="fst-italic fs-6">No results</div>
-        )}
-      </div>
-    )}
-  </div>
-);
-
-const DraggableItem = ({ data, theme }) => {
-  const getItem = useCallback(() => generateIdFromTemplate(data), [data]);
-
-  const [{ opacity }, drag] = useDrag(
-    () => ({
-      type: "HTML",
-      item: { getItem },
-      collect: (monitor) => ({
-        opacity: monitor.isDragging() ? 0.4 : 1,
-      }),
-    }),
-    [data]
-  );
-
-  // const isCard = data.type === "third_party";
-
-  const safeLabel =
-    typeof data.label === "string" || typeof data.label === "number"
-      ? data.label
-      :
-        data.tagname || "[Unknown Component]";
-
-  // if (isCard) {
-    return (
-      <div className={`brDnd-cardItem ${theme}`} ref={drag} style={{ opacity }}>
-        <div className="brDnd-cardImageWrapper">
-          <img
-            src={data.image || tableSvg}
-            alt={safeLabel}
-            className="brDnd-cardImage"
-          />
-        </div>
-        <div className="brDnd-cardLabel">{safeLabel}</div>
-      </div>
-    );
-  // }
-
-  // return (
-  //   <div
-  //     className={`brDnd-sideBarItem ${theme === "dark" ? "dark" : "light"}`}
-  //     ref={drag}
-  //     style={{ opacity }}
-  //   >
-  //     {safeLabel}
-  //   </div>
-  // );
-};
-
-
-DraggableItem.propTypes = {
-  data: PropTypes.object.isRequired,
-  theme: PropTypes.string.isRequired,
-};
-
-SidebarSection.propTypes = {
-  title: PropTypes.string.isRequired,
-  open: PropTypes.bool.isRequired,
-  toggle: PropTypes.func.isRequired,
-  items: PropTypes.array.isRequired,
-  theme: PropTypes.string.isRequired,
 };
 
 SideBarItem.propTypes = {

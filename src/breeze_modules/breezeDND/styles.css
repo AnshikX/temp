@@ -76,10 +76,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: bold;
   cursor: pointer;
   user-select: none;
-  padding: 5px;
+  padding: 3px;
   border: 1px solid transparent;
   border-radius: 10px;
   transition: background 0.2s ease;
@@ -318,7 +317,7 @@
   text-align: center;
   border-radius: 10px;
   border: 1px solid #ddd;
-  padding: 10px;
+  padding: 5px;
   margin: 2px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   transition: transform 0.2s ease;
@@ -338,7 +337,7 @@
 
 .brDnd-cardImage {
   max-width: 100%;
-  max-height: 60px;
+  max-height: 40px;
   object-fit: contain;
 }
 

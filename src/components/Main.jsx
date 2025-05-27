@@ -1,11 +1,9 @@
 import { React } from "react";
-import { ErrorBoundary } from "react-error-boundary";
+import { Form } from "react-bootstrap";
 const Main = ({ prop1 }) => {
-  return (
-    <div>
-      Hello world
-      <ErrorBoundary />
-    </div>
-  );
+  return <div>Hello world
+    <input/>
+    <Form.Control type="email" placeholder="Enter email" />
+  </div>;
 };
 export default Main;
