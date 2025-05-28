@@ -105,7 +105,10 @@ const DropZone = ({ onDrop, children, isOnly, heirarchy = [] }) => {
       }
 
       if (isRow) {
-        if (!isOnly) el.classList.add("brDnd-col-drop");
+        el.classList.add("brDnd-col-drop");
+        if (isOnly) {
+          el.classList.add("w-100");
+        } 
         el.classList.remove("brDnd-row-drop");
       } else {
         el.classList.add("brDnd-row-drop");
@@ -235,7 +238,8 @@ const DropZone = ({ onDrop, children, isOnly, heirarchy = [] }) => {
         drop(node);
         dropZoneRef.current = node;
       }}
-      className={isOnly ? "p-2" : ""}>
+      className={isOnly ? "p-2" : ""}
+    >
       <div className="brDnd-dropZone">{children}</div>
     </div>
   );

@@ -1,5 +1,10 @@
 import { React } from "react";
 const Sdfgh = () => {
-  return <div>Hello world</div>;
+  return (
+    <div className={"row"}>
+      Hello world
+      <div className={"row"} />
+    </div>
+  );
 };
 export default Sdfgh;

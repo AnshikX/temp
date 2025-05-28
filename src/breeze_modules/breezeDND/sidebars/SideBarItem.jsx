@@ -53,7 +53,7 @@ const SideBarItem = ({ sidebarItems, theme }) => {
     });
   }, [sidebarItems.third_party, libComponents, searchQuery]);
 
-  const lenghts = useRef({
+  const lengths = useRef({
     html: filteredHtmlItems.length,
     components: filteredComponents.length,
     third_party: filteredLibs.length,
@@ -61,7 +61,7 @@ const SideBarItem = ({ sidebarItems, theme }) => {
   });
 
   useEffect(() => {
-    lenghts.current = {
+    lengths.current = {
       html: filteredHtmlItems.length,
       components: filteredComponents.length,
       third_party: filteredLibs.length,
@@ -138,10 +138,10 @@ const SideBarItem = ({ sidebarItems, theme }) => {
     const shouldOpen = {};
 
     if (searchQuery.trim() !== "") {
-      if (lenghts.current.html > 0) shouldOpen.html = true;
-      if (lenghts.current.components > 0) shouldOpen.components = true;
-      if (lenghts.current.widgets > 0) shouldOpen.widgets = true;
-      if (lenghts.current.third_party > 0) shouldOpen.third_party = true;
+      if (lengths.current.html > 0) shouldOpen.html = true;
+      if (lengths.current.components > 0) shouldOpen.components = true;
+      if (lengths.current.widgets > 0) shouldOpen.widgets = true;
+      if (lengths.current.third_party > 0) shouldOpen.third_party = true;
     }
 
     if (Object.keys(shouldOpen).length > 0) {
@@ -241,7 +241,7 @@ const SideBarItem = ({ sidebarItems, theme }) => {
                                   .map((item, idx) => (
                                     <DraggableItem
                                       key={`most-${idx}`}
-                                      data={{ ...item, type: "third_party" }}
+                                      data={{ ...item }}
                                       theme={theme}
                                     />
                                   ))}
@@ -267,7 +267,7 @@ const SideBarItem = ({ sidebarItems, theme }) => {
                                   .map((item, idx) => (
                                     <DraggableItem
                                       key={`all-${idx}`}
-                                      data={{ ...item, type: "third_party" }}
+                                      data={{ ...item }}
                                       theme={theme}
                                     />
                                   ))}
