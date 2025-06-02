@@ -72,6 +72,30 @@
   background: #f7f7f7;
 }
 
+.brDnd-accordion.dark{
+  background: rgb(30, 31, 28);
+  color: #a5a5a4;
+}
+
+.brDnd-accordion.light{
+  color: #252525;
+  background: #f7f7f7;
+}
+
+#heading-third-party.dark,
+#heading-HTML-Elements.dark,
+#heading-Components.dark,
+#heading-Widget-Elements.dark{
+  background: #272822;
+}
+
+#heading-third-party.light,
+#heading-HTML-Elements.light,
+#heading-Components.light,
+#heading-Widget-Elements.light{
+  background: rgb(255, 255, 255)
+}
+
 .brDnd-section-title {
   display: flex;
   justify-content: space-between;
@@ -221,6 +245,7 @@
 .brDnd-col-drop.visible {
   width: 30px;
   height: auto;
+  min-height: 10px;
   background-color: #9daab6;
   border: 1px dashed rgba(0, 162, 255, 0.3);
 }
@@ -228,6 +253,7 @@
 .brDnd-row-drop.visible {
   height: 30px;
   width: auto;
+  min-width: 10px;
   background-color: #9daab6;
   border: 1px dashed rgba(0, 162, 255, 0.3);
 }
@@ -355,4 +381,13 @@
   height: auto;
   max-height: 525px;
   overflow: auto;
+}
+
+.accordion-button:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.accordion-button::after {
+  filter: brightness(0) invert(1);
 }

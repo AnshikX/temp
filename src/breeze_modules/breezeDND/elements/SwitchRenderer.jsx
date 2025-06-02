@@ -77,7 +77,7 @@ const SwitchRenderer = ({
       if (item.elementType === "THIRD_PARTY") {
         async function loadThirdPartyComponent() {
           try {
-            const module = await libraries[item.library];
+            const module = await libraries[item.library.split("@")[0]];
             const component = module[item.tagName];
             if (!component) {
               console.error(

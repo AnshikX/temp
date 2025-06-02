@@ -9,8 +9,8 @@ import * as uuid from "uuid";
 import * as tailwindcss from "tailwindcss";
 import * as mui_private_theming from "@mui/private-theming";
 import * as _3d_force_graph from "3d-force-graph";
-import * as react_bootstrap from "react-bootstrap";
 import * as react_error_boundary from "react-error-boundary";
+import * as react_bootstrap from "react-bootstrap";
 
 export const libraries = {
     "react-router-dom": react_router_dom,
@@ -24,6 +24,6 @@ export const libraries = {
     "tailwindcss": tailwindcss,
     "@mui/private-theming": mui_private_theming,
     "3d-force-graph": _3d_force_graph,
-    "react-bootstrap": react_bootstrap,
-    "react-error-boundary": react_error_boundary
+    "react-error-boundary": react_error_boundary,
+    "react-bootstrap": react_bootstrap
 };

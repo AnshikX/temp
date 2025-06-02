@@ -15,7 +15,7 @@ const SideBarItem = ({ sidebarItems, theme }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedLibs, setExpandedLibs] = useState({});
   const [libComponents, setLibComponents] = useState({});
-
+  const toggleButtonRef = useRef(null);
   const [openSections, setOpenSections] = useState({
     html: false,
     components: false,
@@ -85,13 +85,9 @@ const SideBarItem = ({ sidebarItems, theme }) => {
     return rest ? `${formattedFirst}/${rest}` : formattedFirst;
   };
 
-  const toggleSection = (section) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
+  const handleTileClick = () => {
+    toggleButtonRef.current?.click();
   };
-
   const toggleLibrary = async (libNameWithVersion) => {
     setExpandedLibs((prev) => ({
       ...prev,
@@ -167,138 +163,153 @@ const SideBarItem = ({ sidebarItems, theme }) => {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
+      <div
+        className="accordion"
+        id="sidebarAccordion"
+        style={{ "--bs-accordion-border-color": "#a4a4a4" }}
+      >
+        <SidebarSection
+          title="HTML Elements"
+          open={openSections.html}
+          items={filteredHtmlItems}
+          theme={theme}
+        />
 
-      {/* HTML Elements */}
-      <SidebarSection
-        title="HTML Elements"
-        open={openSections.html}
-        toggle={() => toggleSection("html")}
-        items={filteredHtmlItems}
-        theme={theme}
-      />
-
-      {/* Components */}
-      <SidebarSection
-        title="Components"
-        open={openSections.components}
-        toggle={() => toggleSection("components")}
-        items={filteredComponents}
-        theme={theme}
-      />
-
-      {/* Third Party */}
-      <div className="mb-2 mt-3">
-        <span
-          onClick={() => toggleSection("third_party")}
-          className={`brDnd-section-title ${
-            theme === "dark" ? "dark" : "light"
-          }`}
-        >
-          Third Party
-          {openSections.third_party ? (
-            <img src={upArrow} alt="expand" />
-          ) : (
-            <img src={downArrow} alt="collapse" />
-          )}
-        </span>
-
-        {openSections.third_party && (
-          <div className="brDnd-section-content">
-            {filteredLibs.length > 0 ? (
-              filteredLibs.map((libName) => (
-                <div key={libName}>
-                  <div
-                    className="cursor-pointer font-semibold py-1 d-flex justify-content-between"
-                    onClick={() => toggleLibrary(libName)}
-                  >
-                    <span>{formatLibName(libName)}</span>
-                    <img
-                      src={expandedLibs[libName] ? upArrow : downArrow}
-                      className="inline ml-2"
-                      alt="toggle"
-                    />
-                  </div>
-
-                  {expandedLibs[libName] && (
-                    <div className="ml-4">
-                      {libComponents[libName] ? (
-                        <>
-                          {libComponents[libName].mostUsed?.length > 0 && (
-                            <>
-                              <div className="font-semibold text-sm d-flex justify-content-between">
-                                <span> Most Used</span>
-                                <span className="pill">
-                                  {libComponents[libName].mostUsed.length}
-                                </span>
-                              </div>
-                              <div className="brDnd-cardGrid">
-                                {libComponents[libName].mostUsed
-                                  .filter((item) =>
-                                    item.label
-                                      ?.toLowerCase()
-                                      .includes(searchQuery.toLowerCase())
-                                  )
-                                  .map((item, idx) => (
-                                    <DraggableItem
-                                      key={`most-${idx}`}
-                                      data={{ ...item }}
-                                      theme={theme}
-                                    />
-                                  ))}
-                              </div>
-                            </>
-                          )}
-
-                          {libComponents[libName].allComponents?.length > 0 && (
-                            <>
-                              <div className="font-semibold text-sm mt-3 d-flex justify-content-between">
-                                <span> All Components</span>
-                                <span className="pill">
-                                  {libComponents[libName].allComponents.length}
-                                </span>
-                              </div>
-                              <div className="brDnd-cardGrid">
-                                {libComponents[libName].allComponents
-                                  .filter((item) =>
-                                    item.label
-                                      ?.toLowerCase()
-                                      .includes(searchQuery.toLowerCase())
-                                  )
-                                  .map((item, idx) => (
-                                    <DraggableItem
-                                      key={`all-${idx}`}
-                                      data={{ ...item }}
-                                      theme={theme}
-                                    />
-                                  ))}
-                              </div>
-                            </>
-                          )}
-                        </>
-                      ) : (
-                        <div className="text-sm italic text-gray-500">
-                          Loading...
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="fst-italic fs-6">No third-party libraries</div>
-            )}
+        <SidebarSection
+          title="Components"
+          open={openSections.components}
+          items={filteredComponents}
+          theme={theme}
+        />
+        <div className={`accordion-item brDnd-accordion ${theme === "dark" ? "dark" : "light"}`}>
+          <div
+            className={`accordion-header ${theme === "dark" ? "dark" : "light"}`}
+            id="heading-third-party"
+            onClick={handleTileClick}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="d-flex justify-content-between align-items-center p-2">
+              <span className="fw-semibold">Third Party</span>
+              <div className="d-flex align-items-center">
+                <button
+                  ref={toggleButtonRef}
+                  className="accordion-button collapsed p-0 border-0 bg-transparent shadow-none"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapse-third-party"
+                  aria-expanded={openSections.third_party}
+                  aria-controls="collapse-third-party"
+                  onClick={(e) => e.stopPropagation()}
+                ></button>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* Widgets */}
-      <SidebarSection
-        title="Widget Elements"
-        open={openSections.widgets}
-        toggle={() => toggleSection("widgets")}
-        items={filteredWidgets}
-        theme={theme}
-      />
+          <div
+            id="collapse-third-party"
+            className={`accordion-collapse collapse ${
+              openSections.third_party ? "show" : ""
+            }`}
+            aria-labelledby="heading-third-party"
+          >
+            <div className="accordion-body p-2">
+              {filteredLibs.length > 0 ? (
+                filteredLibs.map((libName) => (
+                  <div key={libName}>
+                    <div
+                      className="cursor-pointer font-semibold py-1 d-flex justify-content-between"
+                      onClick={() => toggleLibrary(libName)}
+                    >
+                      <span>{formatLibName(libName)}</span>
+                      <img
+                        src={expandedLibs[libName] ? upArrow : downArrow}
+                        className="inline ml-2"
+                        alt="toggle"
+                      />
+                    </div>
+
+                    {expandedLibs[libName] && (
+                      <div className="ml-4">
+                        {libComponents[libName] ? (
+                          <>
+                            {libComponents[libName].mostUsed?.length > 0 && (
+                              <>
+                                <div className="font-semibold text-sm d-flex justify-content-between">
+                                  <span> Most Used</span>
+                                  <span className="pill">
+                                    {libComponents[libName].mostUsed.length}
+                                  </span>
+                                </div>
+                                <div className="brDnd-cardGrid">
+                                  {libComponents[libName].mostUsed
+                                    .filter((item) =>
+                                      item.label
+                                        ?.toLowerCase()
+                                        .includes(searchQuery.toLowerCase())
+                                    )
+                                    .map((item, idx) => (
+                                      <DraggableItem
+                                        key={`most-${idx}`}
+                                        data={{ ...item }}
+                                        theme={theme}
+                                      />
+                                    ))}
+                                </div>
+                              </>
+                            )}
+
+                            {libComponents[libName].allComponents?.length >
+                              0 && (
+                              <>
+                                <div className="font-semibold text-sm mt-3 d-flex justify-content-between">
+                                  <span> All Components</span>
+                                  <span className="pill">
+                                    {
+                                      libComponents[libName].allComponents
+                                        .length
+                                    }
+                                  </span>
+                                </div>
+                                <div className="brDnd-cardGrid">
+                                  {libComponents[libName].allComponents
+                                    .filter((item) =>
+                                      item.label
+                                        ?.toLowerCase()
+                                        .includes(searchQuery.toLowerCase())
+                                    )
+                                    .map((item, idx) => (
+                                      <DraggableItem
+                                        key={`all-${idx}`}
+                                        data={{ ...item }}
+                                        theme={theme}
+                                      />
+                                    ))}
+                                </div>
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-sm italic text-gray-500">
+                            Loading...
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="fst-italic fs-6">No third-party libraries</div>
+              )}
+            </div>
+          </div>
+        </div>
+        <SidebarSection
+          title="Widget Elements"
+          open={openSections.widgets}
+          items={filteredWidgets}
+          theme={theme}
+        />
+      </div>
     </div>
   );
 };
