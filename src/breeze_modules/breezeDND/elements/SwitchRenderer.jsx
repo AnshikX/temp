@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { libraries } from "../../utils/thirdPartyLibraries";
 import nulledEventAttrs from "./NulledListeners";
 import { ErrorBoundary } from "react-error-boundary";
-
+import * as secondParty from "../../breeze_components"
 const FallbackWithReload = ({ error, resetErrorBoundary, children }) => (
   <div
     style={{
@@ -114,25 +114,25 @@ const SwitchRenderer = ({
 
         loadThirdPartyComponent();
       }
-      // if (item.elementType === "BREEZE_COMPONENT") {
-      //   async function loadSecondPartyComponent() {
-      //     try {
-      //       // const module = await import("/src/breeze_modules/components" );
-      //       const component = module[item.tagName];
-      //       if (!component) {
-      //         console.error(
-      //           `Component ${item.tagName} not found in ${item.library}`
-      //         );
-      //         return;
-      //       }
-      //       setImportedComponent({ component, isLoaded: true });
-      //     } catch (error) {
-      //       console.error(`Failed to load ${item.library}:`, error);
-      //     }
-      //   }
+      if (item.elementType === "BREEZE_COMPONENT") {
+        async function loadSecondPartyComponent() {
+          try {
+            
+            const component = secondParty[item.tagName];
+            if (!component) {
+              console.error(
+                `Component ${item.tagName} not found in ${item.library}`
+              );
+              return;
+            }
+            setImportedComponent({ component, isLoaded: true });
+          } catch (error) {
+            console.error(`Failed to load ${item.library}:`, error);
+          }
+        }
 
-      //   loadSecondPartyComponent();
-      // }
+        loadSecondPartyComponent();
+      }
     }
   }, [item, item.$ref, item.elementType, item.id, item.library, item.tagName]);
 
@@ -174,7 +174,7 @@ const SwitchRenderer = ({
   if (
     item.elementType === "THIRD_PARTY" ||
     item.elementType === "BREEZE_COMPONENT"
-  ) {
+) {
     return importedComponent.isLoaded ? (
       <div
         id={item.id}

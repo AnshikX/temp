@@ -123,7 +123,8 @@ const Renderer = ({
       ) : item.elementType === "HTML" ||
         item.elementType === "html" ||
         item.elementType === "COMPONENT" ||
-        item.elementType === "THIRD_PARTY" ? (
+        item.elementType === "THIRD_PARTY"||
+        item.elementType === "BREEZE_COMPONENT" ? (
         <CombinedRenderer
           item={item}
           handleSelect={handleSelect}
