@@ -3,7 +3,8 @@ const Sdfgh = () => {
   return (
     <div className={"row"}>
       Hello world
-      <div className={"row"} />
+      <input />
+      <input />
     </div>
   );
 };

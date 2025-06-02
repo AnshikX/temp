@@ -157,10 +157,11 @@ const CombinedRenderer = ({
         if (key.startsWith("on")) return acc;
         if (key === "href") return acc;
         if (key === "style" && value?.type === "OBJECT") {
-          const computedStyles = value.properties?.reduce((styleAcc, item) => {
-            styleAcc[item.name] = item.value.value;
-            return styleAcc;
-          }, {}) || {};
+          const computedStyles =
+            value.properties?.reduce((styleAcc, item) => {
+              styleAcc[item.name] = item.value.value;
+              return styleAcc;
+            }, {}) || {};
           if (
             !Object.prototype.hasOwnProperty.call(computedStyles, "padding")
           ) {
@@ -175,7 +176,7 @@ const CombinedRenderer = ({
       {}
     );
   }, [currentItem.attributes]);
-  
+
   const appliedStyles = useMemo(() => {
     return { ...processedAttributes.style, opacity };
   }, [processedAttributes, opacity]);
@@ -206,9 +207,8 @@ const CombinedRenderer = ({
           />
         );
       })}
-      {!isPreview &&
-        currentItem.children &&
-        (currentItem.children.length === 0 ? (
+      {!isPreview && currentItem.children ? (
+        currentItem.children.length === 0 ? (
           <DropZone
             key={`${currentItem.id}-drop`}
             onDrop={(addedItem) =>
@@ -231,7 +231,8 @@ const CombinedRenderer = ({
               currentItem.children[currentItem.children.length - 1].id,
             ]}
           />
-        ))}
+        )
+      ) : null}
     </SwitchRenderer>
   );
 };

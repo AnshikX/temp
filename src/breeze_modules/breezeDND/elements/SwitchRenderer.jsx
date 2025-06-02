@@ -1,34 +1,47 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { loadEntity } from "../../Entities";
 import PropTypes from "prop-types";
 import { libraries } from "../../utils/thirdPartyLibraries";
 import nulledEventAttrs from "./NulledListeners";
 import { ErrorBoundary } from "react-error-boundary";
 
-const FallbackWithReload = ({ error, resetErrorBoundary, children }) => {
-  return (
-    <div style={{ border: "1px solid red", padding: "10px", background: "#fff0f0", color: "#900", position: "relative" }}>
-      <div style={{ marginBottom: "8px" }}>
-        <strong>Render Error:</strong> {error.message}
-      </div>
-      <button
-        onClick={resetErrorBoundary}
-        style={{
-          cursor: "pointer",
-          background: "transparent",
-          border: "none",
-          color: "#007bff",
-          textDecoration: "underline",
-          padding: 0,
-        }}
-      >
-        Reload Component
-      </button>
-      <div style={{ marginTop: "8px" }}>
-        {children}
-      </div>
+const FallbackWithReload = ({ error, resetErrorBoundary, children }) => (
+  <div
+    style={{
+      border: "1px solid red",
+      padding: "10px",
+      background: "#fff0f0",
+      color: "#900",
+      position: "relative",
+    }}
+  >
+    <div style={{ marginBottom: "8px" }}>
+      <strong>Render Error:</strong> {error.message}
     </div>
-  );
+    <button
+      onClick={resetErrorBoundary}
+      style={{
+        cursor: "pointer",
+        background: "transparent",
+        border: "none",
+        color: "#007bff",
+        textDecoration: "underline",
+        padding: 0,
+      }}
+    >
+      Reload Component
+    </button>
+    <div style={{ marginTop: "8px" }}>{children}</div>
+  </div>
+);
+
+const checkNullity = (child) => {
+  if (!child) return null;
+  if (Array.isArray(child)) {
+    const filtered = child.map(checkNullity).filter(Boolean);
+    return filtered.length > 0 ? filtered : null;
+  }
+  return child;
 };
 
 const SwitchRenderer = ({
@@ -47,12 +60,20 @@ const SwitchRenderer = ({
   });
   const [errorResetKey, setErrorResetKey] = useState(0);
 
+  const processedChildren = useMemo(() => {
+    return checkNullity(children);
+  }, [children]);
+
   const forceRerender = () => {
     setErrorResetKey((k) => k + 1);
   };
 
   const boundaryProps = {
-    FallbackComponent: (props) => <FallbackWithReload {...props} resetErrorBoundary={forceRerender} >{children}</FallbackWithReload>,
+    FallbackComponent: (props) => (
+      <FallbackWithReload {...props} resetErrorBoundary={forceRerender}>
+        {processedChildren}
+      </FallbackWithReload>
+    ),
     resetKeys: [errorResetKey],
   };
 
@@ -93,6 +114,25 @@ const SwitchRenderer = ({
 
         loadThirdPartyComponent();
       }
+      // if (item.elementType === "BREEZE_COMPONENT") {
+      //   async function loadSecondPartyComponent() {
+      //     try {
+      //       // const module = await import("/src/breeze_modules/components" );
+      //       const component = module[item.tagName];
+      //       if (!component) {
+      //         console.error(
+      //           `Component ${item.tagName} not found in ${item.library}`
+      //         );
+      //         return;
+      //       }
+      //       setImportedComponent({ component, isLoaded: true });
+      //     } catch (error) {
+      //       console.error(`Failed to load ${item.library}:`, error);
+      //     }
+      //   }
+
+      //   loadSecondPartyComponent();
+      // }
     }
   }, [item, item.$ref, item.elementType, item.id, item.library, item.tagName]);
 
@@ -107,17 +147,23 @@ const SwitchRenderer = ({
         ref={(node) => drag(node)}
       >
         {importedComponent.isLoaded ? (
-          <ErrorBoundary FallbackComponent={({ error }) => <div>{error.message} {children} </div>}>
+          <ErrorBoundary
+            FallbackComponent={({ error }) => (
+              <div>
+                {error.message} {processedChildren}{" "}
+              </div>
+            )}
+          >
             {item.tagName === "fragment"
-              ? children
+              ? processedChildren
               : React.createElement(
                   importedComponent.component,
                   { ...processedAttributes },
-                  children
+                  processedChildren
                 )}
           </ErrorBoundary>
         ) : importedComponent.error ? (
-          <>Deleteded Component{children}</>
+          <>Deleteded Component{processedChildren}</>
         ) : (
           <>Loading...</>
         )}
@@ -125,7 +171,10 @@ const SwitchRenderer = ({
     );
   }
 
-  if (item.elementType === "THIRD_PARTY") {
+  if (
+    item.elementType === "THIRD_PARTY" ||
+    item.elementType === "BREEZE_COMPONENT"
+  ) {
     return importedComponent.isLoaded ? (
       <div
         id={item.id}
@@ -137,11 +186,11 @@ const SwitchRenderer = ({
       >
         <ErrorBoundary {...boundaryProps}>
           {item.tagName === "fragment"
-            ? children
+            ? processedChildren
             : React.createElement(
                 importedComponent.component || item.tagName || "div",
                 { ...processedAttributes },
-                children
+                processedChildren
               )}
         </ErrorBoundary>
       </div>
@@ -162,7 +211,7 @@ const SwitchRenderer = ({
       id: item.id,
       ref: (node) => drag(node),
     },
-    children?.filter((i) => i).length > 0 ? children : null
+    processedChildren
   );
 };
 
