@@ -16,7 +16,7 @@ export const UndoRedoProvider = ({ children }) => {
   const undidChanges = useRef(false);
   const reDidChanges = useRef(false);
   const sequenceRef = useRef(0);
-  console.log(undoStack)
+  // console.log(undoStack)
   const pushChanges = useCallback((changeDetails) => {
     changeDetails.sequence = sequenceRef.current;
 

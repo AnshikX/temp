@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { libraries } from "../../utils/thirdPartyLibraries";
 import nulledEventAttrs from "./NulledListeners";
 import { ErrorBoundary } from "react-error-boundary";
-import * as secondParty from "../../breeze_components"
+import * as secondParty from "../../breeze_components";
 const FallbackWithReload = ({ error, resetErrorBoundary, children }) => (
   <div
     style={{
@@ -117,7 +117,6 @@ const SwitchRenderer = ({
       if (item.elementType === "BREEZE_COMPONENT") {
         async function loadSecondPartyComponent() {
           try {
-            
             const component = secondParty[item.tagName];
             if (!component) {
               console.error(
@@ -174,7 +173,7 @@ const SwitchRenderer = ({
   if (
     item.elementType === "THIRD_PARTY" ||
     item.elementType === "BREEZE_COMPONENT"
-) {
+  ) {
     return importedComponent.isLoaded ? (
       <div
         id={item.id}
