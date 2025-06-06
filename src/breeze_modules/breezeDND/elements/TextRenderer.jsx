@@ -4,6 +4,8 @@ import PropTypes from "prop-types";
 import { useSelectedItemId, useSetters } from "../contexts/SelectionContext";
 import { usePushChanges } from "../contexts/UndoRedoContext";
 import deepCopy from "../../utils/deepcopy";
+import { ErrorBoundary } from "react-error-boundary";
+import { FallbackWithReload } from "../utils/FallbackWithReload";
 
 const TextRenderer = ({
   item,
@@ -21,6 +23,7 @@ const TextRenderer = ({
 
   const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState(item);
+  const [errorResetKey, setErrorResetKey] = useState(0);
 
   const selectedItemId = useSelectedItemId();
   const { setItemDetails } = useSetters();
@@ -50,9 +53,21 @@ const TextRenderer = ({
     [updateItem, pushChanges]
   );
 
-  // useEffect(() => {
-  //   setCurrentItem(item);
-  // }, [item]);
+  useEffect(() => {
+    if (selectedItemId !== currentItem.id) return;
+
+    const handleMessageEvent = (event) => {
+      if (event.data?.source === "BREEZE" && event.data.type === "resource") {
+        const { resource } = event.data;
+        if (resource.type === "updateItem") {
+          updateCurrentItem(resource.itemConfig);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessageEvent);
+    return () => window.removeEventListener("message", handleMessageEvent);
+  }, [selectedItemId, currentItem.id, updateCurrentItem]);
 
   useEffect(() => {
     if (selectedItemId === currentItem.id) {
@@ -63,6 +78,17 @@ const TextRenderer = ({
     }
   }, [selectedItemId, currentItem, setItemDetails, updateCurrentItem]);
 
+  const forceRerender = () => {
+    setErrorResetKey((k) => k + 1);
+  };
+
+  const boundaryProps = {
+    FallbackComponent: (props) => (
+      <FallbackWithReload {...props} resetErrorBoundary={forceRerender}>
+      </FallbackWithReload>
+    ),
+    resetKeys: [errorResetKey],
+  };
   const handleInputKeyDown = (e) => {
     if (e.key === "Enter") {
       handleInputSave(e);
@@ -90,32 +116,36 @@ const TextRenderer = ({
     }
   };
 
-  return isPreview ? (
-    currentItem.value || "Empty Text"
-  ) : isEditing ? (
-    <input
-      id={currentItem.id}
-      style={{ display: "inline", width: "auto" }}
-      type="text"
-      defaultValue={currentItem.value}
-      onMouseOver={handleMouseOver}
-      onMouseOut={handleMouseOut}
-      autoFocus
-      onBlur={handleBlur}
-      onKeyDown={handleInputKeyDown}
-    />
-  ) : (
-    <span
-      id={currentItem.id}
-      style={{ opacity, display: "inline", width: "auto" }}
-      onClick={handleSelect}
-      onDoubleClick={handleDoubleClick}
-      onMouseOver={handleMouseOver}
-      onMouseOut={handleMouseOut}
-      ref={(node) => drag(node)}
-    >
-      {currentItem.value || "Empty Text"}
-    </span>
+  return (
+    <ErrorBoundary {...boundaryProps}>
+      {isPreview ? (
+        currentItem.value || "Empty Text"
+      ) : isEditing ? (
+        <input
+          id={currentItem.id}
+          style={{ display: "inline", width: "auto" }}
+          type="text"
+          defaultValue={currentItem.value}
+          onMouseOver={handleMouseOver}
+          onMouseOut={handleMouseOut}
+          autoFocus
+          onBlur={handleBlur}
+          onKeyDown={handleInputKeyDown}
+        />
+      ) : (
+        <span
+          id={currentItem.id}
+          style={{ opacity, display: "inline", width: "auto" }}
+          onClick={handleSelect}
+          onDoubleClick={handleDoubleClick}
+          onMouseOver={handleMouseOver}
+          onMouseOut={handleMouseOut}
+          ref={(node) => drag(node)}
+        >
+          {currentItem.value || "Empty Text"}
+        </span>
+      )}
+    </ErrorBoundary>
   );
 };
 

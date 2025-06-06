@@ -56,6 +56,7 @@ const Del = ({ editMode }) => {
           },
         ]}
       />
+      Hello Worldssss
     </div>
   );
 };

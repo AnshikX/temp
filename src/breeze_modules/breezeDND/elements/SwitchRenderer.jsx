@@ -5,51 +5,24 @@ import { libraries } from "../../utils/thirdPartyLibraries";
 import nulledEventAttrs from "./NulledListeners";
 import { ErrorBoundary } from "react-error-boundary";
 import * as secondParty from "../../breeze_components";
-const FallbackWithReload = ({ error, resetErrorBoundary, children }) => (
-  <div
-    style={{
-      border: "1px solid red",
-      padding: "10px",
-      background: "#fff0f0",
-      color: "#900",
-      position: "relative",
-    }}
-  >
-    <div style={{ marginBottom: "8px" }}>
-      <strong>Render Error:</strong> {error.message}
-    </div>
-    <button
-      onClick={resetErrorBoundary}
-      style={{
-        cursor: "pointer",
-        background: "transparent",
-        border: "none",
-        color: "#007bff",
-        textDecoration: "underline",
-        padding: 0,
-      }}
-    >
-      Reload Component
-    </button>
-    <div style={{ marginTop: "8px" }}>{children}</div>
-  </div>
-);
-function mergeComputedStyles(sourceEl, destEl) {
-  const computed = window.getComputedStyle(sourceEl);
-  // Get already set inline styles on destination
-  const destInlineStyles = destEl.style;
+import { FallbackWithReload } from "../utils/FallbackWithReload";
 
-  for (let prop of computed) {
-    // Only apply if dest doesn't already define it
-    if (!destInlineStyles[prop]) {
-      try {
-        destEl.style[prop] = computed.getPropertyValue(prop);
-      } catch (e) {
-        console.warn(`Failed to copy style "${prop}":`, e);
-      }
-    }
-  }
-}
+// function mergeComputedStyles(sourceEl, destEl) {
+//   const computed = window.getComputedStyle(sourceEl);
+//   // Get already set inline styles on destination
+//   const destInlineStyles = destEl.style;
+
+//   for (let prop of computed) {
+//     // Only apply if dest doesn't already define it
+//     if (!destInlineStyles[prop]) {
+//       try {
+//         destEl.style[prop] = computed.getPropertyValue(prop);
+//       } catch (e) {
+//         console.warn(`Failed to copy style "${prop}":`, e);
+//       }
+//     }
+//   }
+// }
 
 const checkNullity = (child) => {
   if (!child) return null;
@@ -93,11 +66,7 @@ const SwitchRenderer = ({
   opacity,
   processedAttributes,
 }) => {
-  const isWrapped =
-    item.elementType === "THIRD_PARTY" ||
-    item.elementType === "BREEZE_COMPONENT" ||
-    item.elementType === "COMPONENT" ||
-    item.elementType === "fragment";
+  // const isWrapped = item.elementType === "COMPONENT" || item.elementType === "BREEZE_COMPONENT" || item.elementType === "THIRD_PARTY";
   const [importedComponent, setImportedComponent] = useState({
     isLoaded: false,
     error: false,
@@ -213,13 +182,7 @@ const SwitchRenderer = ({
         ref={(node) => drag(node)}
       >
         {importedComponent.isLoaded ? (
-          <ErrorBoundary
-            FallbackComponent={({ error }) => (
-              <div>
-                {error.message} {processedChildren}{" "}
-              </div>
-            )}
-          >
+          <ErrorBoundary {...boundaryProps}>
             {item.tagName === "fragment"
               ? processedChildren
               : React.createElement(
@@ -242,7 +205,7 @@ const SwitchRenderer = ({
       <div
         id={item.id}
         data-style-id={item.id + "-for-styling"}
-        style={{ opacity, display: "block" }}
+        style={{ opacity, display: "contents" }}
         onClick={handleSelect}
         onMouseOver={handleMouseOver}
         onMouseOut={handleMouseOut}
@@ -323,10 +286,4 @@ SwitchRenderer.propTypes = {
   drag: PropTypes.func.isRequired,
   opacity: PropTypes.number.isRequired,
   processedAttributes: PropTypes.object.isRequired,
-};
-
-FallbackWithReload.propTypes = {
-  error: PropTypes.object,
-  children: PropTypes.node,
-  resetErrorBoundary: PropTypes.func,
 };

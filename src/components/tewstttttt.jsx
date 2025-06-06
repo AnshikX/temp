@@ -9,7 +9,7 @@ const Tewstttttt = ({ item }) => {
   return (
     <div hidden={false} id={"sa"} onClick={"ds"} onPaste={undefined}>
       <Container>
-        <h3 className={"mb-4"}>{item}</h3>
+        <h3 className={"mb-4"}>heelo</h3>
       </Container>
       <Row className={"g-4"}>
         <Col md={3}>
