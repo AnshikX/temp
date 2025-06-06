@@ -45,7 +45,6 @@ export const VerticalSidebar = ({
   textColor = "#212529",
   hoverColor = "#e9ecef",
 }) => {
-  console.log(items);
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [expandedItems, setExpandedItems] = useState({});
 
@@ -120,22 +119,6 @@ export const VerticalSidebar = ({
       </div>
     );
   };
-  let normalizedItems = [];
-
-  if (Array.isArray(items)) {
-    normalizedItems = items;
-  } else if (typeof items?.value === "string") {
-    try {
-      const parsed = JSON.parse(items.value);
-      if (Array.isArray(parsed)) {
-        normalizedItems = parsed;
-      }
-    } catch (e) {
-      console.warn("Failed to parse items.value as JSON", e);
-    }
-  } else if (Array.isArray(items?.value)) {
-    normalizedItems = items.value;
-  }
 
   return (
     <div
@@ -159,7 +142,7 @@ export const VerticalSidebar = ({
         </button>
       </div>
       <div className="flex-grow-1 px-2 mt-2">
-        {normalizedItems.map((item) => renderItem(item))}
+        {items.map((item) => renderItem(item))}
       </div>
     </div>
   );

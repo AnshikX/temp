@@ -8,6 +8,7 @@ import { NumericInput } from "./NumericInput/NumericInput";
 import { PasswordInput } from "./PasswordInput/PasswordInput";
 import { RadioInput } from "./RadioInput/RadioInput";
 import { TextInput } from "./TextInput/TextInput";
+import { LineChart } from "./LineChart/LineChart";
 import { SelectDropdown } from "./SelectDropdown/SelectDropdown";
 
 export {
@@ -21,5 +22,6 @@ export {
   RadioInput,
   PasswordInput,
   TextInput,
+  LineChart,
   SelectDropdown,
 };

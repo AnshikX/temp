@@ -21,6 +21,11 @@ const entityDetails = {
     "from": "/src/services/Swagger Petstore - OpenAPI 3.0/user.jsx",
     "default": false
   },
+  "2c162ecd_f7a8_4012_92d3_e22648c53358": {
+    "exportedAs": "Style",
+    "from": "/src/components/Style.jsx",
+    "default": true
+  },
   "357ca12a_0164_4846_bb9b_01016acd303a": {
     "exportedAs": "deleteOrder",
     "from": "/src/services/Swagger Petstore - OpenAPI 3.0/store.jsx",
@@ -75,11 +80,6 @@ const entityDetails = {
     "exportedAs": "createUserJSON",
     "from": "/src/services/Swagger Petstore - OpenAPI 3.0/user.jsx",
     "default": false
-  },
-  "8d887859_0aee_4629_ab28_091921d1ea88": {
-    "exportedAs": "Tewstttttt",
-    "from": "/src/components/tewstttttt.jsx",
-    "default": true
   },
   "8f3a6663_9435_47e5_ac37_37de2ae6afb7": {
     "exportedAs": "uploadFile",
