@@ -1,69 +1,45 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 
-export const CalendarInput = ({
+export const ColorInput = ({
   // Functional Props
   disabled = false,
-  id = "calendar-input",
-  name = "calendarInput",
+  id = "color-input",
+  name = "colorInput",
   readOnly = false,
   required = false,
 
   // Styling Props
-  className = "calendar-input",
+  className = "color-input",
   style = {
     border: "1px solid #ccc",
-    padding: "8px",
+    padding: "4px",
     borderRadius: "4px",
-    width: "200px",
+    width: "50px",
+    height: "40px",
+    cursor: "pointer",
   },
-  wrapperClassName = "calendar-wrapper",
+  wrapperClassName = "color-wrapper",
 
   // Label Props
-  labelText = "Select Date:",
-  labelPosition = "left",
+  labelText = "Select Color:",
+  labelPosition = "left", // top | bottom | left | right
   labelVisibility = true,
-  labelClassName = "calendar-label mt-2",
+  labelClassName = "color-label mt-2",
   requiredIndicator = false,
 
-  // Calendar Props
-  format = "yyyy-MM-dd",
-  maxDate = null,
-  minDate = null,
+  // Color Input Specific
   onChange = () => {},
-  placeholder = "Select a date",
-  value = null,
+  value = "#000000",
 }) => {
   const [internalValue, setInternalValue] = useState(value);
 
-  const formatDate = (date) => {
-    if (!date) return "";
-    const d = new Date(date);
-    const pad = (n) => String(n).padStart(2, "0");
-
-    switch (format) {
-      case "MM/dd/yyyy":
-        return `${pad(d.getMonth() + 1)}/${pad(
-          d.getDate()
-        )}/${d.getFullYear()}`;
-      case "dd/MM/yyyy":
-        return `${pad(d.getDate())}/${pad(
-          d.getMonth() + 1
-        )}/${d.getFullYear()}`;
-      case "yyyy-MM-dd":
-      default:
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
-          d.getDate()
-        )}`;
-    }
-  };
-
   const handleChange = (e) => {
-    const date = e.target.value ? new Date(e.target.value) : null;
-    setInternalValue(date);
-    onChange(date);
+    if (readOnly) return;
+    const newValue = e.target.value;
+    setInternalValue(newValue);
+    onChange(newValue);
   };
-
   const renderLabel = () =>
     labelVisibility && (
       <label
@@ -91,7 +67,7 @@ export const CalendarInput = ({
     >
       {(labelPosition === "top" || labelPosition === "left") && renderLabel()}
       <input
-        type="date"
+        type="color"
         id={id}
         name={name}
         disabled={disabled}
@@ -99,10 +75,7 @@ export const CalendarInput = ({
         required={required}
         className={className}
         style={style}
-        max={maxDate ? formatDate(maxDate) : undefined}
-        min={minDate ? formatDate(minDate) : undefined}
-        placeholder={placeholder}
-        value={internalValue ? formatDate(internalValue) : ""}
+        value={internalValue}
         onChange={handleChange}
       />
       {(labelPosition === "bottom" || labelPosition === "right") &&
@@ -111,7 +84,7 @@ export const CalendarInput = ({
   );
 };
 
-CalendarInput.propTypes = {
+ColorInput.propTypes = {
   disabled: PropTypes.bool,
   id: PropTypes.string,
   name: PropTypes.string,
@@ -125,10 +98,6 @@ CalendarInput.propTypes = {
   labelVisibility: PropTypes.bool,
   labelClassName: PropTypes.string,
   requiredIndicator: PropTypes.bool,
-  format: PropTypes.oneOf(["MM/dd/yyyy", "dd/MM/yyyy", "yyyy-MM-dd"]),
-  maxDate: PropTypes.instanceOf(Date),
-  minDate: PropTypes.instanceOf(Date),
   onChange: PropTypes.func,
-  placeholder: PropTypes.string,
-  value: PropTypes.instanceOf(Date),
+  value: PropTypes.string,
 };

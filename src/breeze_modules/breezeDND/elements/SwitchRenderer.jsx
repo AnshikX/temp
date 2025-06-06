@@ -34,6 +34,22 @@ const FallbackWithReload = ({ error, resetErrorBoundary, children }) => (
     <div style={{ marginTop: "8px" }}>{children}</div>
   </div>
 );
+function mergeComputedStyles(sourceEl, destEl) {
+  const computed = window.getComputedStyle(sourceEl);
+  // Get already set inline styles on destination
+  const destInlineStyles = destEl.style;
+
+  for (let prop of computed) {
+    // Only apply if dest doesn't already define it
+    if (!destInlineStyles[prop]) {
+      try {
+        destEl.style[prop] = computed.getPropertyValue(prop);
+      } catch (e) {
+        console.warn(`Failed to copy style "${prop}":`, e);
+      }
+    }
+  }
+}
 
 const checkNullity = (child) => {
   if (!child) return null;
@@ -42,6 +58,29 @@ const checkNullity = (child) => {
     return filtered.length > 0 ? filtered : null;
   }
   return child;
+};
+
+const normalizeAttributes = (attrs = {}) => {
+  const normalized = {};
+
+  for (const key in attrs) {
+    const val = attrs[key];
+    if (val && typeof val === "object" && val.type === "CUSTOM") {
+      try {
+        if (typeof val.value === "string") {
+          normalized[key] = JSON.parse(val.value);
+        } else {
+          normalized[key] = val.value;
+        }
+      } catch {
+        normalized[key] = val.value;
+      }
+    } else {
+      normalized[key] = val?.value ?? val;
+    }
+  }
+
+  return normalized;
 };
 
 const SwitchRenderer = ({
@@ -54,6 +93,11 @@ const SwitchRenderer = ({
   opacity,
   processedAttributes,
 }) => {
+  const isWrapped =
+    item.elementType === "THIRD_PARTY" ||
+    item.elementType === "BREEZE_COMPONENT" ||
+    item.elementType === "COMPONENT" ||
+    item.elementType === "fragment";
   const [importedComponent, setImportedComponent] = useState({
     isLoaded: false,
     error: false,
@@ -76,6 +120,29 @@ const SwitchRenderer = ({
     ),
     resetKeys: [errorResetKey],
   };
+
+  const normalizedAttributes = useMemo(
+    () => normalizeAttributes(processedAttributes),
+    [processedAttributes]
+  );
+
+  // useEffect(() => {
+  //   if (isWrapped) {
+  //     setTimeout(() => {
+  //       const el = document.querySelector(
+  //         `[data-style-id="${item.id}-for-styling"]`
+  //       );
+
+  //       if (el && el.childNodes.length === 1) {
+  //         const child = el.childNodes[0];
+  //         console.log(child);
+  //         if (child) {
+  //           mergeComputedStyles(child, el);
+  //         }
+  //       }
+  //     }, 50);
+  //   }
+  // }, [isWrapped, item.id]);
 
   useEffect(() => {
     if (item.elementType === "COMPONENT") {
@@ -157,7 +224,7 @@ const SwitchRenderer = ({
               ? processedChildren
               : React.createElement(
                   importedComponent.component,
-                  { ...processedAttributes },
+                  { ...normalizedAttributes },
                   processedChildren
                 )}
           </ErrorBoundary>
@@ -170,14 +237,12 @@ const SwitchRenderer = ({
     );
   }
 
-  if (
-    item.elementType === "THIRD_PARTY" ||
-    item.elementType === "BREEZE_COMPONENT"
-  ) {
+  if (item.elementType === "THIRD_PARTY") {
     return importedComponent.isLoaded ? (
       <div
         id={item.id}
-        style={{ opacity }}
+        data-style-id={item.id + "-for-styling"}
+        style={{ opacity, display: "block" }}
         onClick={handleSelect}
         onMouseOver={handleMouseOver}
         onMouseOut={handleMouseOut}
@@ -188,7 +253,32 @@ const SwitchRenderer = ({
             ? processedChildren
             : React.createElement(
                 importedComponent.component || item.tagName || "div",
-                { ...processedAttributes },
+                { ...normalizedAttributes },
+                processedChildren
+              )}
+        </ErrorBoundary>
+      </div>
+    ) : (
+      <div>Loading...</div>
+    );
+  }
+  if (item.elementType === "BREEZE_COMPONENT") {
+    return importedComponent.isLoaded ? (
+      <div
+        id={item.id}
+        data-style-id={item.id + "-for-styling"}
+        style={{ opacity, display: "block" }}
+        onClick={handleSelect}
+        onMouseOver={handleMouseOver}
+        onMouseOut={handleMouseOut}
+        ref={(node) => drag(node)}
+      >
+        <ErrorBoundary {...boundaryProps}>
+          {item.tagName === "fragment"
+            ? processedChildren
+            : React.createElement(
+                importedComponent.component || item.tagName || "div",
+                normalizedAttributes,
                 processedChildren
               )}
         </ErrorBoundary>
@@ -201,7 +291,7 @@ const SwitchRenderer = ({
   return React.createElement(
     item.tagName || "div",
     {
-      ...processedAttributes,
+      ...normalizedAttributes,
       ...nulledEventAttrs,
       style: item.appliedStyles,
       onClick: handleSelect,

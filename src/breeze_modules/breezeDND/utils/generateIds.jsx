@@ -5,6 +5,10 @@ export const generateIdFromTemplate = (item) => {
   if (!item || typeof item !== "object") return item;
 
   let jsonStr = JSON.stringify(item);
+  
+  if(item.elementType === "THIRD_PARTY" && item.exampleConfig) {
+    jsonStr = JSON.stringify(item.exampleConfig);
+  }
 
   const placeholderMap = {};
 

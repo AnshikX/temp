@@ -4,12 +4,12 @@ import { Row } from "react-bootstrap";
 import { Col } from "react-bootstrap";
 import { Card } from "react-bootstrap";
 import { CardBody } from "react-bootstrap";
-const Tewstttttt = () => {
+const Tewstttttt = ({ item }) => {
   const frgbh = 0;
   return (
     <div hidden={false} id={"sa"} onClick={"ds"} onPaste={undefined}>
       <Container>
-        <h3 className={"mb-4"}>Hello World</h3>
+        <h3 className={"mb-4"}>{item}</h3>
       </Container>
       <Row className={"g-4"}>
         <Col md={3}>

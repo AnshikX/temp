@@ -1,67 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 
-export const CalendarInput = ({
+export const NumericInput = ({
   // Functional Props
   disabled = false,
-  id = "calendar-input",
-  name = "calendarInput",
+  id = "numeric-input",
+  name = "numericInput",
   readOnly = false,
   required = false,
 
   // Styling Props
-  className = "calendar-input",
+  className = "numeric-input",
   style = {
     border: "1px solid #ccc",
     padding: "8px",
     borderRadius: "4px",
     width: "200px",
   },
-  wrapperClassName = "calendar-wrapper",
+  wrapperClassName = "numeric-wrapper",
 
   // Label Props
-  labelText = "Select Date:",
-  labelPosition = "left",
+  labelText = "Enter Number:",
+  labelPosition = "left", // top | bottom | left | right
   labelVisibility = true,
-  labelClassName = "calendar-label mt-2",
+  labelClassName = "numeric-label mt-2",
   requiredIndicator = false,
 
-  // Calendar Props
-  format = "yyyy-MM-dd",
-  maxDate = null,
-  minDate = null,
+  // Numeric Props
+  max = undefined,
+  min = undefined,
+  step = 1,
   onChange = () => {},
-  placeholder = "Select a date",
-  value = null,
+  placeholder = "",
+  value = undefined,
 }) => {
   const [internalValue, setInternalValue] = useState(value);
 
-  const formatDate = (date) => {
-    if (!date) return "";
-    const d = new Date(date);
-    const pad = (n) => String(n).padStart(2, "0");
-
-    switch (format) {
-      case "MM/dd/yyyy":
-        return `${pad(d.getMonth() + 1)}/${pad(
-          d.getDate()
-        )}/${d.getFullYear()}`;
-      case "dd/MM/yyyy":
-        return `${pad(d.getDate())}/${pad(
-          d.getMonth() + 1
-        )}/${d.getFullYear()}`;
-      case "yyyy-MM-dd":
-      default:
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
-          d.getDate()
-        )}`;
-    }
-  };
+  useEffect(() => {
+    setInternalValue(value);
+  }, [value]);
 
   const handleChange = (e) => {
-    const date = e.target.value ? new Date(e.target.value) : null;
-    setInternalValue(date);
-    onChange(date);
+    const val = e.target.value;
+    const num = val === "" ? undefined : Number(val);
+    setInternalValue(num);
+    onChange(num);
   };
 
   const renderLabel = () =>
@@ -90,8 +73,9 @@ export const CalendarInput = ({
       }}
     >
       {(labelPosition === "top" || labelPosition === "left") && renderLabel()}
+
       <input
-        type="date"
+        type="number"
         id={id}
         name={name}
         disabled={disabled}
@@ -99,19 +83,21 @@ export const CalendarInput = ({
         required={required}
         className={className}
         style={style}
-        max={maxDate ? formatDate(maxDate) : undefined}
-        min={minDate ? formatDate(minDate) : undefined}
+        max={max}
+        min={min}
+        step={step}
         placeholder={placeholder}
-        value={internalValue ? formatDate(internalValue) : ""}
+        value={internalValue !== undefined ? internalValue : ""}
         onChange={handleChange}
       />
+
       {(labelPosition === "bottom" || labelPosition === "right") &&
         renderLabel()}
     </div>
   );
 };
 
-CalendarInput.propTypes = {
+NumericInput.propTypes = {
   disabled: PropTypes.bool,
   id: PropTypes.string,
   name: PropTypes.string,
@@ -125,10 +111,10 @@ CalendarInput.propTypes = {
   labelVisibility: PropTypes.bool,
   labelClassName: PropTypes.string,
   requiredIndicator: PropTypes.bool,
-  format: PropTypes.oneOf(["MM/dd/yyyy", "dd/MM/yyyy", "yyyy-MM-dd"]),
-  maxDate: PropTypes.instanceOf(Date),
-  minDate: PropTypes.instanceOf(Date),
+  max: PropTypes.number,
+  min: PropTypes.number,
+  step: PropTypes.number,
   onChange: PropTypes.func,
   placeholder: PropTypes.string,
-  value: PropTypes.instanceOf(Date),
+  value: PropTypes.number,
 };

@@ -1,67 +1,41 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 
-export const CalendarInput = ({
+export const CheckboxInput = ({
   // Functional Props
   disabled = false,
-  id = "calendar-input",
-  name = "calendarInput",
+  id = "checkbox-input",
+  name = "checkboxInput",
   readOnly = false,
   required = false,
 
   // Styling Props
-  className = "calendar-input",
+  className = "checkbox-input",
   style = {
-    border: "1px solid #ccc",
-    padding: "8px",
-    borderRadius: "4px",
-    width: "200px",
+    width: "20px",
+    height: "20px",
+    cursor: "pointer",
   },
-  wrapperClassName = "calendar-wrapper",
+  wrapperClassName = "checkbox-wrapper",
 
   // Label Props
-  labelText = "Select Date:",
-  labelPosition = "left",
+  labelText = "Check Me",
+  labelPosition = "right", // top, bottom, left, right
   labelVisibility = true,
-  labelClassName = "calendar-label mt-2",
+  labelClassName = "checkbox-label",
   requiredIndicator = false,
 
-  // Calendar Props
-  format = "yyyy-MM-dd",
-  maxDate = null,
-  minDate = null,
+  // Checkbox specific
+  checked = false,
   onChange = () => {},
-  placeholder = "Select a date",
-  value = null,
 }) => {
-  const [internalValue, setInternalValue] = useState(value);
-
-  const formatDate = (date) => {
-    if (!date) return "";
-    const d = new Date(date);
-    const pad = (n) => String(n).padStart(2, "0");
-
-    switch (format) {
-      case "MM/dd/yyyy":
-        return `${pad(d.getMonth() + 1)}/${pad(
-          d.getDate()
-        )}/${d.getFullYear()}`;
-      case "dd/MM/yyyy":
-        return `${pad(d.getDate())}/${pad(
-          d.getMonth() + 1
-        )}/${d.getFullYear()}`;
-      case "yyyy-MM-dd":
-      default:
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
-          d.getDate()
-        )}`;
-    }
-  };
+  const [internalChecked, setInternalChecked] = useState(checked);
 
   const handleChange = (e) => {
-    const date = e.target.value ? new Date(e.target.value) : null;
-    setInternalValue(date);
-    onChange(date);
+    if (readOnly) return;
+    const newChecked = e.target.checked;
+    setInternalChecked(newChecked);
+    onChange(newChecked);
   };
 
   const renderLabel = () =>
@@ -91,18 +65,15 @@ export const CalendarInput = ({
     >
       {(labelPosition === "top" || labelPosition === "left") && renderLabel()}
       <input
-        type="date"
+        type="checkbox"
         id={id}
         name={name}
         disabled={disabled}
-        readOnly={readOnly}
         required={required}
+        readOnly={readOnly}
         className={className}
         style={style}
-        max={maxDate ? formatDate(maxDate) : undefined}
-        min={minDate ? formatDate(minDate) : undefined}
-        placeholder={placeholder}
-        value={internalValue ? formatDate(internalValue) : ""}
+        checked={internalChecked}
         onChange={handleChange}
       />
       {(labelPosition === "bottom" || labelPosition === "right") &&
@@ -111,7 +82,7 @@ export const CalendarInput = ({
   );
 };
 
-CalendarInput.propTypes = {
+CheckboxInput.propTypes = {
   disabled: PropTypes.bool,
   id: PropTypes.string,
   name: PropTypes.string,
@@ -125,10 +96,6 @@ CalendarInput.propTypes = {
   labelVisibility: PropTypes.bool,
   labelClassName: PropTypes.string,
   requiredIndicator: PropTypes.bool,
-  format: PropTypes.oneOf(["MM/dd/yyyy", "dd/MM/yyyy", "yyyy-MM-dd"]),
-  maxDate: PropTypes.instanceOf(Date),
-  minDate: PropTypes.instanceOf(Date),
+  checked: PropTypes.bool,
   onChange: PropTypes.func,
-  placeholder: PropTypes.string,
-  value: PropTypes.instanceOf(Date),
 };
