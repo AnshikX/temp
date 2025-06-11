@@ -72,12 +72,12 @@
   background: #f7f7f7;
 }
 
-.brDnd-accordion.dark{
+.brDnd-accordion.dark {
   background: rgb(30, 31, 28);
   color: #a5a5a4;
 }
 
-.brDnd-accordion.light{
+.brDnd-accordion.light {
   color: #252525;
   background: #f7f7f7;
 }
@@ -85,15 +85,15 @@
 #heading-third-party.dark,
 #heading-HTML-Elements.dark,
 #heading-Components.dark,
-#heading-Widget-Elements.dark{
+#heading-Widget-Elements.dark {
   background: #272822;
 }
 
 #heading-third-party.light,
 #heading-HTML-Elements.light,
 #heading-Components.light,
-#heading-Widget-Elements.light{
-  background: rgb(255, 255, 255)
+#heading-Widget-Elements.light {
+  background: rgb(255, 255, 255);
 }
 
 .brDnd-section-title {
@@ -108,11 +108,11 @@
   transition: background 0.2s ease;
 }
 
-.brDnd-section-title.dark{
+.brDnd-section-title.dark {
   background: rgba(165, 165, 164, 0.2);
 }
 
-.brDnd-section-title.light{
+.brDnd-section-title.light {
   background: rgb(104, 104, 100);
 }
 
@@ -122,7 +122,6 @@
   flex-direction: column;
   gap: 5px;
 }
-
 
 .brDnd-section-tile {
   border-radius: 0.75rem;
@@ -279,7 +278,7 @@
   background: #a5a5a4;
 }
 
-.hide-scrollbar::-webkit-scrollbar{
+.hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 /* Search Bar Container */
@@ -314,7 +313,6 @@
   user-select: none;
 }
 
-
 .brDnd-resizer::before {
   content: "";
   position: absolute;
@@ -326,7 +324,7 @@
 
 .pill {
   background-color: #a5a5a4;
-  color:#333;
+  color: #333;
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 0.75rem;
@@ -345,7 +343,7 @@
   border: 1px solid #ddd;
   padding: 5px;
   margin: 2px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
   cursor: grab;
 }
@@ -390,4 +388,8 @@
 
 .accordion-button::after {
   filter: brightness(0) invert(1);
+}
+
+.no-transition {
+  transition: none !important;
 }

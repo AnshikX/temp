@@ -117,6 +117,13 @@ const Container = () => {
   const startResizing = () => {
     isResizingRef.current = true;
     document.body.style.cursor = "col-resize";
+
+    const sidebar = sidebarRef.current;
+    const pageContainer = pageContainerRef.current;
+
+    if (sidebar) sidebar.classList.add("no-transition");
+    if (pageContainer) pageContainer.classList.add("no-transition");
+
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", stopResizing);
   };
@@ -124,9 +131,19 @@ const Container = () => {
   const stopResizing = () => {
     isResizingRef.current = false;
     document.body.style.cursor = "default";
+
+    const sidebar = sidebarRef.current;
+    const pageContainer = pageContainerRef.current;
+
+    if (sidebar) sidebar.classList.remove("no-transition");
+    if (pageContainer) pageContainer.classList.remove("no-transition");
+
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", stopResizing);
   };
+
+  const shouldAnimateSidebar =
+    !isResizingRef.current && !isPreview && sidebarWidthRef.current > 0;
 
   return (
     <div className="brDnd-body">
@@ -137,10 +154,14 @@ const Container = () => {
         }`}
         style={{
           width: isPreview ? 0 : `${sidebarWidthRef.current}px`,
-          transition: "width 0.3s ease-in-out",
         }}
       >
-        <SideBarItem sidebarItems={sidebarItems} theme={theme} />
+        <SideBarItem
+          sidebarItems={sidebarItems}
+          theme={theme}
+          shouldAnimateSidebar={shouldAnimateSidebar}
+          isResizingRef={isResizingRef}
+        />
       </div>
 
       {/* Resizer */}
@@ -157,7 +178,6 @@ const Container = () => {
           width: isPreview
             ? "100%"
             : `calc(100% - ${sidebarWidthRef.current + 6}px)`,
-          transition: "width 0.3s ease-in-out",
         }}
       >
         <div

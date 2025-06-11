@@ -5,6 +5,8 @@ export const getValue = (conf) => {
       obj[key] = getValue(value);
     });
     return obj;
+  } else if (conf.type === "LABEL") {
+    return JSON.parse(conf.value);
   } else if (conf.type === "ARRAY") {
     return conf.values.map((val) => getValue(val));
   } else if (conf.type === "STRING") {

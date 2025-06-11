@@ -2,13 +2,19 @@ import { createContext, useState, useEffect, useContext } from "react";
 import PropTypes from "prop-types";
 import "../styles/ThemeContext.css";
 
-const availableThemes = ["theme-default","theme-modern", "theme-retro", "theme-pastel", "theme-high-contrast"];
+const availableThemes = [
+  "theme-default",
+  "theme-modern",
+  "theme-retro",
+  "theme-high-contrast",
+  "theme-pastel",
+];
 const ThemeContext = createContext();
 
 const useThemeContext = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-  const defaultTheme = "theme-default";
+  const defaultTheme = "theme-high-contrast";
   const defaultMode = "light";
 
   const [themeName, setThemeName] = useState(defaultTheme);
@@ -42,7 +48,9 @@ export const ThemeProvider = ({ children }) => {
   };
 
   return (
-    <ThemeContext.Provider value={{ themeName, mode, toggleMode, setTheme, availableThemes }}>
+    <ThemeContext.Provider
+      value={{ themeName, mode, toggleMode, setTheme, availableThemes }}
+    >
       {children}
     </ThemeContext.Provider>
   );

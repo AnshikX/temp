@@ -3,6 +3,9 @@ import generate_uuid from "../../utils/UuidGenerator";
 // Replaces all ID placeholders in the form of ${...} with fresh UUIDs.
 export const generateIdFromTemplate = (item) => {
   if (!item || typeof item !== "object") return item;
+  if (item.icon){
+    delete item.icon;
+  }
 
   let jsonStr = JSON.stringify(item);
   

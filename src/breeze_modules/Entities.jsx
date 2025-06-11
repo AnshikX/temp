@@ -91,6 +91,11 @@ const entityDetails = {
     "from": "/src/services/Swagger Petstore - OpenAPI 3.0/pet.jsx",
     "default": false
   },
+  "LAYOUT_ENTITY_ID": {
+    "exportedAs": "Layout",
+    "from": "/src/components/Breeze_Layout/Layout.jsx",
+    "default": true
+  },
   "PROJECT_ROUTER": {
     "exportedAs": "router",
     "from": "/src/Routing.jsx",
@@ -110,6 +115,11 @@ const entityDetails = {
     "exportedAs": "ThemeProvider",
     "from": "/src/context/ThemeContext.jsx",
     "default": false
+  },
+  "TOPBAR_ENTITY_ID": {
+    "exportedAs": "Topbar",
+    "from": "/src/components/Breeze_Layout/TopBar.jsx",
+    "default": true
   },
   "a1ff4392_9122_4fd6_8df5_30dc27c7c607": {
     "exportedAs": "createUserURLENCODED",
@@ -155,6 +165,11 @@ const entityDetails = {
     "exportedAs": "findPetsByTags",
     "from": "/src/services/Swagger Petstore - OpenAPI 3.0/pet.jsx",
     "default": false
+  },
+  "d90daac3_a11d_4590_8cda_5a37dc1e272d": {
+    "exportedAs": "temp",
+    "from": "/src/store/temp.jsx",
+    "default": true
   },
   "dafcaf5a_0129_45f9_9bf4_f64829c6909c": {
     "exportedAs": "findPetsByStatus",

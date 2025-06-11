@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import { generateIdFromTemplate } from "../utils/generateIds";
 import { useDrag } from "react-dnd";
-import tableSvg from "../assets/svgs/table.svg";
 import PropTypes from "prop-types";
 
 export const DraggableItem = ({ data, theme }) => {
@@ -21,14 +20,13 @@ export const DraggableItem = ({ data, theme }) => {
   // const isCard = data.type === "third_party";
 
   // if (isCard) {
+  // console.log(data)
+  const iconClass = data.icon || "bi-table";
+
   return (
     <div className={`brDnd-cardItem ${theme}`} ref={drag} style={{ opacity }}>
       <div className="brDnd-cardImageWrapper">
-        <img
-          src={data.image || tableSvg}
-          alt={data.label}
-          className="brDnd-cardImage"
-        />
+      <i className={`bi ${iconClass} fs-4 brDnd-cardIcon`} />
       </div>
       <div className="brDnd-cardLabel">{data.label}</div>
     </div>

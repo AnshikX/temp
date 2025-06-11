@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import { useCallback, useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { useSelectedItemId, useSetters } from "../contexts/SelectionContext";
@@ -17,10 +16,6 @@ const TextRenderer = ({
   drag,
   isPreview,
 }) => {
-  if (item.textType === "value") {
-    return "VALUE COMPONENT GOES HERE";
-  }
-
   const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState(item);
   const [errorResetKey, setErrorResetKey] = useState(0);
@@ -116,6 +111,21 @@ const TextRenderer = ({
     }
   };
 
+  if(currentItem.textType === "value"){
+    return (
+      <span
+        id={currentItem.id}
+        style={{ opacity, display: "inline", width: "auto" }}
+        onClick={handleSelect}
+        onDoubleClick={handleDoubleClick}
+        onMouseOver={handleMouseOver}
+        onMouseOut={handleMouseOut}
+        ref={(node) => drag(node)}
+      >
+        ${currentItem.value.label || "variable"}
+      </span>
+    )
+  }
   return (
     <ErrorBoundary {...boundaryProps}>
       {isPreview ? (
