@@ -28,7 +28,7 @@ export const RadioInput = ({
   // Radio Props
   options = [
     { label: "Option 1", value: "option1" },
-    { label: "Option 2", value: "option2", disabled },
+    { label: "Option 2", value: "option2", disabled: false },
     { label: "Option 3", value: "option3" },
   ],
   value = undefined,
