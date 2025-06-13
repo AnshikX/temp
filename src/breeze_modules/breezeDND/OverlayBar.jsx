@@ -166,7 +166,7 @@ const OverlayBar = ({
     </>,
     document.body
   );
-};4
+};
 
 OverlayBar.propTypes = {
   itemId: PropTypes.string.isRequired,

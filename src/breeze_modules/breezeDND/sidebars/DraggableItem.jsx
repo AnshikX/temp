@@ -2,8 +2,9 @@ import { useCallback } from "react";
 import { generateIdFromTemplate } from "../utils/generateIds";
 import { useDrag } from "react-dnd";
 import PropTypes from "prop-types";
+import truncateWithEllipsis from "../../utils/truncateText";
 
-export const DraggableItem = ({ data, theme }) => {
+export const DraggableItem = ({ data }) => {
   const getItem = useCallback(() => generateIdFromTemplate(data), [data]);
 
   const [{ opacity }, drag] = useDrag(
@@ -17,34 +18,20 @@ export const DraggableItem = ({ data, theme }) => {
     [data]
   );
 
-  // const isCard = data.type === "third_party";
-
-  // if (isCard) {
-  // console.log(data)
   const iconClass = data.icon || "bi-table";
 
   return (
-    <div className={`brDnd-cardItem ${theme}`} ref={drag} style={{ opacity }}>
+    <div className="brDnd-cardItem" ref={drag} style={{ opacity }}>
       <div className="brDnd-cardImageWrapper">
-      <i className={`bi ${iconClass} fs-4 brDnd-cardIcon`} />
+        <i className={`bi ${iconClass} fs-4 brDnd-cardIcon`} />
       </div>
-      <div className="brDnd-cardLabel">{data.label}</div>
+      <div className="brDnd-cardLabel">
+        {truncateWithEllipsis(data.label, 10)}
+      </div>
     </div>
   );
-  // }
-
-  // return (
-  //   <div
-  //     className={`brDnd-sideBarItem ${theme === "dark" ? "dark" : "light"}`}
-  //     ref={drag}
-  //     style={{ opacity }}
-  //   >
-  //     {safeLabel}
-  //   </div>
-  // );
 };
 
 DraggableItem.propTypes = {
   data: PropTypes.object.isRequired,
-  theme: PropTypes.string.isRequired,
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import SideBarItem from "./sidebars/SideBarItem";
 import Renderer from "./Renderer";
-import "./styles.css";
+import "./styles/Container.css";
 import { useSetters } from "./contexts/SelectionContext";
 import { useUndoRedo } from "./contexts/UndoRedoContext";
 import undoButton from "./assets/svgs/undo-button.svg";
@@ -21,7 +21,6 @@ const Container = () => {
   const { setSelectedItemId } = useSetters();
   const [isPreview, setIsPreview] = useState(false);
   const { undoChanges, redoChanges, undoStack, redoStack } = useUndoRedo();
-  const [theme, setTheme] = useState("dark");
   const trigger = useState(0)[1];
 
   const isResizingRef = useRef(false);
@@ -43,8 +42,15 @@ const Container = () => {
           if (resource.type === "sidebarItems") {
             setSidebarItems(resource.sidebarItems);
           }
-          if (resource.type === "theme") {
-            setTheme(resource.theme);
+          if (
+            event.data?.source === "Navbar" &&
+            event.data?.resource?.type === "colorTheme"
+          ) {
+            const colorVars = event.data.resource.colors;
+
+            Object.entries(colorVars).forEach(([key, value]) => {
+              document.documentElement.style.setProperty(key, value);
+            });
           }
         }
       }
@@ -147,21 +153,20 @@ const Container = () => {
 
   return (
     <div className="brDnd-body">
-      <div
-        ref={sidebarRef}
-        className={`brDnd-sidebar ${isPreview ? "brDnd-hidden" : "p-2"} ${
-          theme === "dark" ? "dark" : "light"
-        }`}
-        style={{
-          width: isPreview ? 0 : `${sidebarWidthRef.current}px`,
-        }}
-      >
-        <SideBarItem
-          sidebarItems={sidebarItems}
-          theme={theme}
-          shouldAnimateSidebar={shouldAnimateSidebar}
-          isResizingRef={isResizingRef}
-        />
+      <div style={{ backgroundColor: 'var(--brDnd-color-secondary)' }}>
+        <div
+          ref={sidebarRef}
+          className={`brDnd-sidebar ${isPreview ? "brDnd-hidden" : "p-2 hide-scrollbar"}`}
+          style={{
+            width: isPreview ? 0 : `${sidebarWidthRef.current}px`,
+          }}
+        >
+          <SideBarItem
+            sidebarItems={sidebarItems}
+            shouldAnimateSidebar={shouldAnimateSidebar}
+            isResizingRef={isResizingRef}
+          />
+        </div>
       </div>
 
       {/* Resizer */}
@@ -180,10 +185,7 @@ const Container = () => {
             : `calc(100% - ${sidebarWidthRef.current + 6}px)`,
         }}
       >
-        <div
-          className={`brDnd-shortcutBar ${theme === "dark" ? "dark" : "light"}`}
-          id="toolBar"
-        >
+        <div className="brDnd-shortcutBar" id="toolBar">
           <div className={`${isPreview ? "brDnd-hidden" : ""} d-flex`}>
             <span
               onClick={undoChanges}
@@ -196,11 +198,7 @@ const Container = () => {
               <img src={redoButton} alt="redo" />
             </span>
           </div>
-          <div
-            className={`brDnd-toggleButtonContainer ${
-              theme === "dark" ? "dark" : "light"
-            }`}
-          >
+          <div className="brDnd-toggleButtonContainer">
             <button
               className="brDnd-toggleButton"
               onClick={() => {

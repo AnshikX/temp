@@ -1,6 +1,5 @@
 import Container from "./Container.jsx";
 import { HTML5Backend } from "react-dnd-html5-backend";
-
 import { DndProvider } from "react-dnd";
 import { SelectionProvider } from "./contexts/SelectionContext.jsx";
 import { VisibilityProvider } from "./contexts/VisibilityContext.jsx";

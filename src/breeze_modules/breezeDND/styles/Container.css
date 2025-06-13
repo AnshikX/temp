@@ -1,0 +1,117 @@
+.brDnd-body {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100%;
+  position: fixed;
+}
+
+.brDnd-sidebar {
+  height: 100%;
+  transition: width 0.3s ease-in-out;
+  overflow: auto;
+  border-radius: 10px;
+  background-color: var(--brDnd-color-primary);
+  color: var(--brDnd-color-text);
+}
+
+.brDnd-shortcutBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 4%;
+  background-color: var(--brDnd-color-secondary);
+  color: var(--brDnd-color-text);
+}
+
+/* Button Container */
+.brDnd-toggleButtonContainer {
+  align-items: center;
+  margin-right: 20px;
+  margin-bottom: 10px;
+  transition: width 0.3s ease-in-out;
+}
+
+/* Toggle Button */
+.brDnd-toggleButton {
+  padding: 2px 10px;
+  font-size: 12px;
+  background-color: #006eb9;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.brDnd-toggleButton:hover {
+  background-color: #0056b3;
+}
+
+.brDnd-accordion {
+  background-color: var(--brDnd-color-primary);
+  color: var(--brDnd-color-text);
+}
+
+#heading-third-party,
+#heading-HTML-Elements,
+#heading-Components,
+#heading-Widget-Elements {
+  background-color: var(--brDnd-color-secondary);
+  color: var(--brDnd-color-text);
+}
+
+.brDnd-hidden {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out, width 0.3s ease-in-out;
+}
+
+.brDnd-page {
+  flex: 1 1 auto;
+  padding: 0 20px;
+  margin: 20px;
+  margin-top: 10px;
+  border: 1px solid green;
+}
+
+.brDnd-pageContainer {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  flex-direction: column;
+  margin-bottom: 100px;
+  transition: width 0.3s ease-in-out;
+}
+
+::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
+  background: #a5a5a4;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.brDnd-resizer {
+  cursor: col-resize;
+  position: relative;
+  z-index: 100;
+  user-select: none;
+}
+
+.brDnd-resizer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -8px;
+  width: 16px;
+  height: 100%;
+}
+
+.no-transition {
+  transition: none !important;
+}

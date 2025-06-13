@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { useEffect, useRef } from "react";
 import { useDrop, useDragLayer } from "react-dnd";
+import "./styles/Dropzone.css";
 
 const dropzoneRegistry = new Set();
 

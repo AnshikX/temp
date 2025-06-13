@@ -27,6 +27,5 @@ export const libraries = {
     "@mui/private-theming": mui_private_theming,
     "3d-force-graph": _3d_force_graph,
     "react-error-boundary": react_error_boundary,
-    "react-bootstrap": react_bootstrap,
-    // "bootstrap-icons": bootstrap_icons
+    "react-bootstrap": react_bootstrap
 };
