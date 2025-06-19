@@ -373,6 +373,6 @@ const Style = ({ styles }) => {
       return next;
     });
   };
-  return <Container className={"mt-3"}>fghjkl;</Container>;
+  return <Container />;
 };
 export default Style;
