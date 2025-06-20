@@ -23,19 +23,6 @@ const Asdf = () => {
                   variant={"top"}
                 />
               </Card>
-              <Col>
-                <Card />
-              </Col>
-            </Col>
-            <Col>
-              <Card>
-                <CardImg
-                  src={
-                    "https://cloudfour.com/examples/img-currentsrc/images/kitten-large.png"
-                  }
-                  variant={"top"}
-                />
-              </Card>
             </Col>
             <Col>
               <Card>
@@ -77,11 +64,20 @@ const Asdf = () => {
                     Some quick example text to build on the card title.
                   </CardText>
                 </CardBody>
+                <CardImg
+                  src={
+                    "https://cloudfour.com/examples/img-currentsrc/images/kitten-large.png"
+                  }
+                  variant={"top"}
+                />
               </Card>
             </Col>
           </Row>
         </Container>
       </Container>
+      <Col>
+        <Card />
+      </Col>
       <Col />
     </div>
   );
