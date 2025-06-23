@@ -24,6 +24,7 @@ const CombinedRenderer = ({
   opacity,
   drag,
   isPreview,
+  zbase = 0,
 }) => {
   const { setItemDetails } = useSetters();
   const selectedItemId = useSelectedItemId();
@@ -190,6 +191,7 @@ const CombinedRenderer = ({
       drag={drag}
       opacity={opacity}
       processedAttributes={processedAttributes}
+      zbase={zbase}
     >
       {currentItem.children?.map((child, index) => {
         const prevId = index > 0 ? currentItem.children[index - 1].id : null;
@@ -204,6 +206,7 @@ const CombinedRenderer = ({
             isFirst={false}
             isPreview={isPreview}
             handleDelete={() => removeChild(child.id)}
+            zbase={zbase + 20}
           />
         );
       })}
@@ -217,6 +220,8 @@ const CombinedRenderer = ({
             position="bottom"
             isOnly={true}
             heirarchy={[...stableHeirarchy, currentItem.id]}
+            zbase={zbase}
+            ownerId={currentItem.id}
           ></DropZone>
         ) : (
           <DropZone
@@ -230,6 +235,8 @@ const CombinedRenderer = ({
               currentItem.id,
               currentItem.children[currentItem.children.length - 1].id,
             ]}
+            zbase={zbase}
+            ownerId={currentItem.id}
           />
         )
       ) : null}
@@ -253,6 +260,7 @@ CombinedRenderer.propTypes = {
   updateItem: PropTypes.func.isRequired,
   drag: PropTypes.func.isRequired,
   isPreview: PropTypes.bool.isRequired,
+  zbase: PropTypes.number.isRequired
 };
 
 export default React.memo(CombinedRenderer, (prevProps, nextProps) => {
@@ -265,6 +273,7 @@ export default React.memo(CombinedRenderer, (prevProps, nextProps) => {
     prevProps.handleSelect === nextProps.handleSelect &&
     prevProps.drag === nextProps.drag &&
     prevProps.updateItem === nextProps.updateItem &&
-    prevProps.isPreview === nextProps.isPreview
+    prevProps.isPreview === nextProps.isPreview &&
+    prevProps.zbase === nextProps.zbase
   );
 });

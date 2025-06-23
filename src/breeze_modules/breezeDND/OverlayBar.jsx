@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 import deleteButton from "./assets/svgs/delete-button.svg";
+import { useVisibility } from "./contexts/VisibilityContext";
 
 const OverlayBar = ({
   itemId,
@@ -13,6 +14,9 @@ const OverlayBar = ({
   overDetails,
 }) => {
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
+  
+  const { hoveredItemId } = useVisibility();
+  const isHovering = hoveredItemId === itemId;
 
   const getPosition = useCallback(() => {
     const element = document.getElementById(itemId);
@@ -25,7 +29,7 @@ const OverlayBar = ({
       height: rect.height,
     };
   }, [itemId]);
-
+  
   useEffect(() => {
     let animationFrameId;
 
@@ -106,14 +110,24 @@ const OverlayBar = ({
     };
   }, [getPosition, itemId, isVisible]);
 
+  const border = (() => {
+    if (isHovering) return "2px solid red";              // This one is hovered
+    if (hoveredItemId && hoveredItemId !== itemId) {
+      return "none";                                     // Another one is hovered
+    }
+    return isVisible ? "2px solid #007bff" : "2px dashed #ccc";  // Normal fallback
+  })();
+  
   const overlayStyle = {
     position: "fixed",
     top: `${pos.top}px`,
     left: `${pos.left}px`,
     width: `${pos.width}px`,
     height: `${pos.height}px`,
-    border: isVisible ? "2px solid #007bff" : "2px dashed #ccc",
-    zIndex: 1000,
+    border,
+  transition: "border 0.2s ease",
+
+    zIndex: 10,
     pointerEvents: "none",
   };
 
@@ -129,7 +143,7 @@ const OverlayBar = ({
     color: "white",
     padding: "5px 10px",
     borderRadius: "5px",
-    zIndex: 1001,
+    zIndex: 11,
     boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
     display: "flex",
     gap: "10px",

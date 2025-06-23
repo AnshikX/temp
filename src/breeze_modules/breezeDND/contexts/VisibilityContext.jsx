@@ -61,6 +61,7 @@ export const VisibilityProvider = ({ children }) => {
         toggleVisibility,
         setVisibility,
         hoveredItemId,
+        setHoveredItemId
       }}
     >
       {children}

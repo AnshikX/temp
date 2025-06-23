@@ -15,6 +15,7 @@ const TextRenderer = ({
   opacity,
   drag,
   isPreview,
+  zbase = 0,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentItem, setCurrentItem] = useState(item);
@@ -115,7 +116,7 @@ const TextRenderer = ({
     return (
       <span
         id={currentItem.id}
-        style={{ opacity, display: "inline", width: "auto" }}
+        style={{ opacity, display: "inline", width: "auto", zIndex: zbase + 22 }}
         onClick={handleSelect}
         onDoubleClick={handleDoubleClick}
         onMouseOver={handleMouseOver}
@@ -133,7 +134,7 @@ const TextRenderer = ({
       ) : isEditing ? (
         <input
           id={currentItem.id}
-          style={{ display: "inline", width: "auto" }}
+          style={{ display: "inline", width: "auto" ,zIndex: zbase + 22 }}
           type="text"
           defaultValue={currentItem.value}
           onMouseOver={handleMouseOver}
@@ -145,7 +146,7 @@ const TextRenderer = ({
       ) : (
         <span
           id={currentItem.id}
-          style={{ opacity, display: "inline", width: "auto" }}
+          style={{ opacity, display: "inline", position:"relative", width: "auto",zIndex: zbase + 22 }}
           onClick={handleSelect}
           onDoubleClick={handleDoubleClick}
           onMouseOver={handleMouseOver}
@@ -173,6 +174,7 @@ TextRenderer.propTypes = {
   opacity: PropTypes.number.isRequired,
   drag: PropTypes.func.isRequired,
   isPreview: PropTypes.bool.isRequired,
+  zbase: PropTypes.number.isRequired
 };
 
 export default TextRenderer;

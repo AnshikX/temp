@@ -21,6 +21,7 @@ const ConditionalRendererX = ({
   heirarchy,
   isPreview,
   updateItem,
+  zbase
 }) => {
   const [currentItem, setCurrentItem] = useState(item);
   const selectedItemId = useSelectedItemId();
@@ -100,7 +101,7 @@ const ConditionalRendererX = ({
     <div
       ref={(node) => drag(node)}
       onClick={handleSelect}
-      style={{ opacity }}
+      style={{ opacity, zIndex: zbase, position: "relative" }}
       onMouseOver={handleMouseOver}
       id={currentItem.id}
       onMouseOut={handleMouseOut}
@@ -200,6 +201,7 @@ ConditionalRendererX.propTypes = {
   updateItem: PropTypes.func.isRequired,
   heirarchy: PropTypes.array.isRequired,
   isPreview: PropTypes.bool.isRequired,
+  zbase: PropTypes.number.isRequired
 };
 
 export default ConditionalRenderer;

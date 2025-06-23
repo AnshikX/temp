@@ -2,13 +2,14 @@ import PropTypes from "prop-types";
 import { useEffect, useRef } from "react";
 import { useDrop, useDragLayer } from "react-dnd";
 import "./styles/Dropzone.css";
+import { useVisibility } from "./contexts/VisibilityContext";
 
 const dropzoneRegistry = new Set();
 
 // Maximum number of dropzones to show at once
-const MAX_VISIBLE = 5;
+const MAX_VISIBLE = 3;
 // The maximum distance (in pixels) from the dropzone's edge at which it will be considered
-const MAX_DISTANCE = 50; // adjust as needed
+const MAX_DISTANCE = 20; // adjust as needed
 
 // Compute the minimal distance from a point to a rectangle
 function distanceToRect(x, y, rect) {
@@ -18,9 +19,16 @@ function distanceToRect(x, y, rect) {
 }
 
 const ACCEPTS = ["HTML", "TEXT"];
-
-const DropZone = ({ onDrop, children, isOnly, heirarchy = [] }) => {
+const DropZone = ({
+  onDrop,
+  children,
+  isOnly,
+  heirarchy = [],
+  zbase = 0,
+  ownerId,
+}) => {
   const dropZoneRef = useRef();
+  const { setHoveredItemId } = useVisibility();
 
   const [, drop] = useDrop(
     {
@@ -67,10 +75,11 @@ const DropZone = ({ onDrop, children, isOnly, heirarchy = [] }) => {
     [onDrop, heirarchy]
   );
 
-  const { isDragging } = useDragLayer((monitor) => ({
+  const { isDragging, item } = useDragLayer((monitor) => ({
     isDragging: monitor.isDragging(),
+    item: monitor.getItem(),
   }));
-
+  
   // Apply row/col drop class based on parent's layout
   useEffect(() => {
     const el = dropZoneRef.current;
@@ -109,23 +118,24 @@ const DropZone = ({ onDrop, children, isOnly, heirarchy = [] }) => {
         el.classList.add("brDnd-col-drop");
         if (isOnly) {
           el.classList.add("w-100");
-        } 
+        }
         el.classList.remove("brDnd-row-drop");
       } else {
         el.classList.add("brDnd-row-drop");
         el.classList.remove("brDnd-col-drop");
       }
     }
-  }, [isOnly]);
+  }, [isOnly, isDragging]);
 
   useEffect(() => {
     const el = dropZoneRef.current;
     if (!el) return;
+    el.dataset.ownerId = ownerId || "";
     dropzoneRegistry.add(el);
     return () => {
       dropzoneRegistry.delete(el);
     };
-  }, []);
+  }, [ownerId]);
 
   // Proximity logic to determine which dropzones become visible and which one is highlighted
   useEffect(() => {
@@ -134,13 +144,14 @@ const DropZone = ({ onDrop, children, isOnly, heirarchy = [] }) => {
         el.classList.remove("visible");
         el.classList.remove("highlighted");
       });
+      setHoveredItemId(null);
       return;
     }
 
     let animationFrame = null;
     let lastVisible = new Set();
     let lastRun = 0;
-    const THROTTLE_MS = 300;
+    const THROTTLE_MS = 500;
 
     const handleMouseMove = (e) => {
       const now = performance.now();
@@ -218,6 +229,14 @@ const DropZone = ({ onDrop, children, isOnly, heirarchy = [] }) => {
 
         if (bestMatch) {
           bestMatch.classList.add("highlighted");
+
+          // Get ownerId from data-attribute
+          const matchOwnerId = bestMatch.dataset.ownerId;
+          if (matchOwnerId) {
+            setHoveredItemId(matchOwnerId);
+          }
+        } else {
+          setHoveredItemId(null);
         }
 
         lastVisible = newVisible;
@@ -231,13 +250,19 @@ const DropZone = ({ onDrop, children, isOnly, heirarchy = [] }) => {
         cancelAnimationFrame(animationFrame);
       }
     };
-  }, [isDragging]);
+  }, [isDragging, ownerId, setHoveredItemId]);
+
+  const isMatchId = item?.item?.id === ownerId
 
   return (
     <div
       ref={(node) => {
         drop(node);
         dropZoneRef.current = node;
+      }}
+      style={{
+        zIndex: isMatchId ? zbase + 2 : zbase + 5,
+        ...(isDragging ? {} : { pointerEvents: "none" }),
       }}
       className={isOnly ? "p-2" : ""}
     >
@@ -252,6 +277,8 @@ DropZone.propTypes = {
   children: PropTypes.node,
   isOnly: PropTypes.bool,
   heirarchy: PropTypes.array,
+  zbase: PropTypes.number,
+  ownerId: PropTypes.string,
 };
 
 export default DropZone;

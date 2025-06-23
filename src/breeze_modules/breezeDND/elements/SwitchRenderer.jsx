@@ -6,23 +6,7 @@ import nulledEventAttrs from "./NulledListeners";
 import { ErrorBoundary } from "react-error-boundary";
 import * as secondParty from "../../breeze_components";
 import { FallbackWithReload } from "../utils/FallbackWithReload";
-
-// function mergeComputedStyles(sourceEl, destEl) {
-//   const computed = window.getComputedStyle(sourceEl);
-//   // Get already set inline styles on destination
-//   const destInlineStyles = destEl.style;
-
-//   for (let prop of computed) {
-//     // Only apply if dest doesn't already define it
-//     if (!destInlineStyles[prop]) {
-//       try {
-//         destEl.style[prop] = computed.getPropertyValue(prop);
-//       } catch (e) {
-//         console.warn(`Failed to copy style "${prop}":`, e);
-//       }
-//     }
-//   }
-// }
+import { OverlayRenderer } from "./OverlayRenderer";
 
 const checkNullity = (child) => {
   if (!child) return null;
@@ -65,8 +49,8 @@ const SwitchRenderer = ({
   drag,
   opacity,
   processedAttributes,
+  zbase = 0,
 }) => {
-  // const isWrapped = item.elementType === "COMPONENT" || item.elementType === "BREEZE_COMPONENT" || item.elementType === "THIRD_PARTY";
   const [importedComponent, setImportedComponent] = useState({
     isLoaded: false,
     error: false,
@@ -94,24 +78,6 @@ const SwitchRenderer = ({
     () => normalizeAttributes(processedAttributes),
     [processedAttributes]
   );
-
-  // useEffect(() => {
-  //   if (isWrapped) {
-  //     setTimeout(() => {
-  //       const el = document.querySelector(
-  //         `[data-style-id="${item.id}-for-styling"]`
-  //       );
-
-  //       if (el && el.childNodes.length === 1) {
-  //         const child = el.childNodes[0];
-  //         console.log(child);
-  //         if (child) {
-  //           mergeComputedStyles(child, el);
-  //         }
-  //       }
-  //     }, 50);
-  //   }
-  // }, [isWrapped, item.id]);
 
   useEffect(() => {
     if (item.elementType === "COMPONENT") {
@@ -171,56 +137,55 @@ const SwitchRenderer = ({
     }
   }, [item, item.$ref, item.elementType, item.id, item.library, item.tagName]);
 
-  if (item.elementType === "COMPONENT" || item.tagName === "fragment") {
-    return (
-      <div
-        id={item.id}
-        style={{ opacity }}
-        onClick={handleSelect}
-        onMouseOver={handleMouseOver}
-        onMouseOut={handleMouseOut}
-        ref={(node) => drag(node)}
-      >
-        {importedComponent.isLoaded ? (
-          <ErrorBoundary {...boundaryProps}>
-            {item.tagName === "fragment"
-              ? processedChildren
-              : React.createElement(
-                  importedComponent.component,
-                  { ...normalizedAttributes },
-                  processedChildren
-                )}
-          </ErrorBoundary>
-        ) : importedComponent.error ? (
-          <>Deleteded Component{processedChildren}</>
-        ) : (
-          <>Loading...</>
-        )}
-      </div>
-    );
-  }
-
-  if (item.elementType === "THIRD_PARTY") {
+  // if (item.elementType === "COMPONENT" || item.tagName === "fragment") {
+  //   return (
+  //     <div
+  //       id={item.id}
+  //       style={{ opacity }}
+  //       onClick={handleSelect}
+  //       onMouseOver={handleMouseOver}
+  //       onMouseOut={handleMouseOut}
+  //       ref={(node) => drag(node)}
+  //     >
+  //       {importedComponent.isLoaded ? (
+  //         <ErrorBoundary {...boundaryProps}>
+  //           {item.tagName === "fragment"
+  //             ? processedChildren
+  //             : React.createElement(
+  //                 importedComponent.component,
+  //                 { ...normalizedAttributes },
+  //                 processedChildren
+  //               )}
+  //         </ErrorBoundary>
+  //       ) : importedComponent.error ? (
+  //         <>Deleteded Component{processedChildren}</>
+  //       ) : (
+  //         <>Loading...</>
+  //       )}
+  //     </div>
+  //   );
+  // }
+  if (item.elementType === "THIRD_PARTY" || item.elementType === "COMPONENT") {
     return importedComponent.isLoaded ? (
-      <div
-        id={item.id}
-        data-style-id={item.id + "-for-styling"}
-        style={{ opacity, display: "contents" }}
-        onClick={handleSelect}
-        onMouseOver={handleMouseOver}
-        onMouseOut={handleMouseOut}
-        ref={(node) => drag(node)}
-      >
-        <ErrorBoundary {...boundaryProps}>
+      <ErrorBoundary {...boundaryProps}>
+        <OverlayRenderer drag={drag} zbase={zbase+1} onClick={handleSelect} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} id={item.id}>
           {item.tagName === "fragment"
             ? processedChildren
             : React.createElement(
                 importedComponent.component || item.tagName || "div",
-                { ...normalizedAttributes },
+                {
+                  ...normalizedAttributes,
+                  id: item.id,
+                  // style: item.appliedStyles,
+                  // onClick: handleSelect,
+                  // onMouseOver: handleMouseOver,
+                  // onMouseOut: handleMouseOut,
+                  // ref: (node) => drag(node),
+                },
                 processedChildren
               )}
-        </ErrorBoundary>
-      </div>
+        </OverlayRenderer>
+      </ErrorBoundary>
     ) : (
       <div>Loading...</div>
     );
@@ -229,8 +194,7 @@ const SwitchRenderer = ({
     return importedComponent.isLoaded ? (
       <div
         id={item.id}
-        data-style-id={item.id + "-for-styling"}
-        style={{ opacity, display: "block" }}
+        style={{ opacity, zIndex: zbase }}
         onClick={handleSelect}
         onMouseOver={handleMouseOver}
         onMouseOut={handleMouseOut}
@@ -256,7 +220,7 @@ const SwitchRenderer = ({
     {
       ...normalizedAttributes,
       ...nulledEventAttrs,
-      style: item.appliedStyles,
+      style: {...item.appliedStyles, opacity, zIndex: zbase, position: "relative"},
       onClick: handleSelect,
       onMouseOver: handleMouseOver,
       onMouseOut: handleMouseOut,
@@ -286,4 +250,5 @@ SwitchRenderer.propTypes = {
   drag: PropTypes.func.isRequired,
   opacity: PropTypes.number.isRequired,
   processedAttributes: PropTypes.object.isRequired,
+  zbase: PropTypes.number.isRequired,
 };

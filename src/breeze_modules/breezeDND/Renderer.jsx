@@ -20,6 +20,7 @@ const Renderer = ({
   updateItem,
   handleDelete,
   overDetails,
+  zbase = 0,
 }) => {
   const { visibilityState, hoveredItemId } = useVisibility();
   const { setSelectedItemId } = useSetters();
@@ -106,6 +107,8 @@ const Renderer = ({
           onDrop={(draggedItem) => handleDrop(draggedItem, 0)}
           position="top"
           heirarchy={firstDropZoneHeriarchy}
+          zbase={zbase}
+          ownerId={item.id}
         />
       )}
       {item.elementType === "TEXT" ? (
@@ -119,6 +122,7 @@ const Renderer = ({
           updateItem={updateItem}
           drag={drag}
           isPreview={isPreview}
+          zbase={zbase}
         />
       ) : item.elementType === "HTML" ||
         item.elementType === "html" ||
@@ -136,6 +140,7 @@ const Renderer = ({
           opacity={opacity}
           drag={drag}
           isPreview={isPreview}
+          zbase={zbase}
         />
       ) : item.elementType === "MAP" ? (
         <MapRenderer
@@ -148,6 +153,7 @@ const Renderer = ({
           heirarchy={heirarchy}
           updateItem={updateItem}
           isPreview={isPreview}
+          zbase={zbase}
         />
       ) : item.elementType === "CONDITIONAL" ? (
         <ConditionalRenderer
@@ -160,6 +166,7 @@ const Renderer = ({
           heirarchy={heirarchy}
           updateItem={updateItem}
           isPreview={isPreview}
+          zbase={zbase}
         />
       ) : (
         <div
@@ -213,6 +220,7 @@ Renderer.propTypes = {
   updateItem: PropTypes.func.isRequired,
   handleDelete: PropTypes.func,
   overDetails: PropTypes.object,
+  zbase: PropTypes.number
 };
 
 export default Renderer;
