@@ -168,7 +168,7 @@ const SwitchRenderer = ({
   if (item.elementType === "THIRD_PARTY" || item.elementType === "COMPONENT") {
     return importedComponent.isLoaded ? (
       <ErrorBoundary {...boundaryProps}>
-        <OverlayRenderer drag={drag} zbase={zbase+1} onClick={handleSelect} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} id={item.id}>
+        <OverlayRenderer drag={drag} zbase={zbase+1} onClick={handleSelect} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} itemId = {item.id} id={"overlay-" + item.id}>
           {item.tagName === "fragment"
             ? processedChildren
             : React.createElement(
@@ -194,7 +194,7 @@ const SwitchRenderer = ({
     return importedComponent.isLoaded ? (
       <div
         id={item.id}
-        style={{ opacity, zIndex: zbase }}
+        style={{ opacity, zIndex: zbase, position: "relative" }}
         onClick={handleSelect}
         onMouseOver={handleMouseOver}
         onMouseOut={handleMouseOut}

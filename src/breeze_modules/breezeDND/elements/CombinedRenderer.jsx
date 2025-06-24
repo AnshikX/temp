@@ -153,29 +153,33 @@ const CombinedRenderer = ({
 
   const processedAttributes = useMemo(() => {
     if (!currentItem.attributes) return {};
-    return Object.entries(currentItem.attributes).reduce(
-      (acc, [key, value]) => {
-        if (key.startsWith("on")) return acc;
-        if (key === "href") return acc;
-        if (key === "style" && value?.type === "OBJECT") {
-          const computedStyles =
-            value.properties?.reduce((styleAcc, item) => {
-              styleAcc[item.name] = item.value.value;
-              return styleAcc;
-            }, {}) || {};
-          if (
-            !Object.prototype.hasOwnProperty.call(computedStyles, "padding")
-          ) {
-            computedStyles["padding"] = "4px";
+
+    const result = {};
+    const entries = Object.entries(currentItem.attributes);
+
+    for (const [key, value] of entries) {
+      if (key.startsWith("on") || key === "href") continue;
+
+      if (key === "style" && value?.type === "OBJECT") {
+        const computedStyles = {};
+
+        if (Array.isArray(value.properties)) {
+          for (const item of value.properties) {
+            computedStyles[item.name] = item.value.value;
           }
-          acc[key] = computedStyles;
-        } else {
-          acc[key] = getValue(value);
         }
-        return acc;
-      },
-      {}
-    );
+
+        if (!Object.prototype.hasOwnProperty.call(computedStyles, "padding")) {
+          computedStyles["padding"] = "4px";
+        }
+
+        result[key] = computedStyles;
+      } else {
+        result[key] = getValue(value);
+      }
+    }
+
+    return result;
   }, [currentItem.attributes]);
 
   const appliedStyles = useMemo(() => {
@@ -207,6 +211,7 @@ const CombinedRenderer = ({
             isPreview={isPreview}
             handleDelete={() => removeChild(child.id)}
             zbase={zbase + 20}
+            parentId={currentItem.id}
           />
         );
       })}
@@ -260,7 +265,7 @@ CombinedRenderer.propTypes = {
   updateItem: PropTypes.func.isRequired,
   drag: PropTypes.func.isRequired,
   isPreview: PropTypes.bool.isRequired,
-  zbase: PropTypes.number.isRequired
+  zbase: PropTypes.number.isRequired,
 };
 
 export default React.memo(CombinedRenderer, (prevProps, nextProps) => {

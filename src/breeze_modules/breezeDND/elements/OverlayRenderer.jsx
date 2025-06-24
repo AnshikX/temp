@@ -5,10 +5,19 @@ export const OverlayRenderer = ({
   children,
   drag,
   zbase = 0,
+  itemId,
   id,
   ...props
 }) => {
   const ref = useRef();
+  const el = document.getElementById(itemId);
+  if (el) {
+    const computedHeight = window.getComputedStyle(el).height;
+    if (computedHeight <= "0px") {
+      el.style.height = "10px";
+    }
+  }
+
   return (
     <>
       <div ref={ref} style={{ display: "contents" }}>
@@ -94,6 +103,7 @@ OverlayRenderer.propTypes = {
   children: PropTypes.node.isRequired,
   drag: PropTypes.func.isRequired,
   zbase: PropTypes.number.isRequired,
+  itemId: PropTypes.string.isRequired,
   id: PropTypes.string.isRequired,
 };
 

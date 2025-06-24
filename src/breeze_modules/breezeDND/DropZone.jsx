@@ -192,12 +192,21 @@ const DropZone = ({
         // Sort by distance (smallest first)
         distances.sort((a, b) => a.dist - b.dist);
 
-        // Pick the closest MAX_VISIBLE dropzones that are within MAX_DISTANCE
+        let threshold = MAX_DISTANCE;
+        const MAX_DISTANCE_LIMIT = 2000; // Max distance to consider
+        let visibleCandidates = [];
+
+        while (threshold <= MAX_DISTANCE_LIMIT) {
+          visibleCandidates = distances.filter(({ dist }) => dist <= threshold);
+          if (visibleCandidates.length >= MAX_VISIBLE) break;
+          threshold += 10; // Gradually expand the search radius
+        }
+
         const newVisible = new Set(
-          distances
-            .filter(({ dist }) => dist <= MAX_DISTANCE)
+          visibleCandidates
+            .sort((a, b) => a.dist - b.dist)
             .slice(0, MAX_VISIBLE)
-            .map((d) => d.el)
+            .map(({ el }) => el)
         );
 
         // Find which dropzone (among all) the cursor is actually over:
@@ -252,7 +261,7 @@ const DropZone = ({
     };
   }, [isDragging, ownerId, setHoveredItemId]);
 
-  const isMatchId = item?.item?.id === ownerId
+  const isMatchId = item?.item?.id === ownerId;
 
   return (
     <div

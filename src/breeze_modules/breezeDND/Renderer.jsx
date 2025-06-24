@@ -21,6 +21,7 @@ const Renderer = ({
   handleDelete,
   overDetails,
   zbase = 0,
+  parentId,
 }) => {
   const { visibilityState, hoveredItemId } = useVisibility();
   const { setSelectedItemId } = useSetters();
@@ -105,10 +106,10 @@ const Renderer = ({
       {!isPreview && addSibling && (
         <DropZone
           onDrop={(draggedItem) => handleDrop(draggedItem, 0)}
-          position="top"
+          position="top"  
           heirarchy={firstDropZoneHeriarchy}
           zbase={zbase}
-          ownerId={item.id}
+          ownerId={parentId}
         />
       )}
       {item.elementType === "TEXT" ? (
@@ -220,7 +221,8 @@ Renderer.propTypes = {
   updateItem: PropTypes.func.isRequired,
   handleDelete: PropTypes.func,
   overDetails: PropTypes.object,
-  zbase: PropTypes.number
+  zbase: PropTypes.number,
+  parentId: PropTypes.string
 };
 
 export default Renderer;

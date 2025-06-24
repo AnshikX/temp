@@ -20,7 +20,8 @@ export const getValue = (conf) => {
   } else if (conf.type === "NULL") {
     return null;
   } else if (conf.type === "CUSTOM") {
-    return conf;
+    // this is just a fallback, shouldn't use it
+    return eval(`(${conf.value})`);
   } else {
     console.log(conf);
   }

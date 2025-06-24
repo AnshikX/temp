@@ -456,6 +456,11 @@ const entityDetails = {
     "from": "/src/services/Breeze API_1/routes.jsx",
     "default": false
   },
+  "65b4a542_d1f0_4417_82b1_5cde8dddad02": {
+    "exportedAs": "Tttt",
+    "from": "/src/components/tttt.jsx",
+    "default": true
+  },
   "666d7d8b_7eb2_475f_9699_f68d4728016c": {
     "exportedAs": "configEditorManageApiClientAddSchemaCreateJSON",
     "from": "/src/services/Breeze API/manage-api-client.jsx",
