@@ -14,13 +14,22 @@ const OverlayBar = ({
   overDetails,
 }) => {
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
-  
+
   const { hoveredItemId } = useVisibility();
   const isHovering = hoveredItemId === itemId;
 
+  const getTargetElement = useCallback(() => {
+    return (
+      document.getElementById(itemId) ||
+      document.querySelector(`[data-overlay-id="${itemId}"]`)
+    );
+  }, [itemId]);
+
   const getPosition = useCallback(() => {
-    const element = document.getElementById(itemId);
-    if (!element) return { top: 0, left: 0, width: 0, height: 0 };
+    const element = getTargetElement();
+    if (!element) {
+      return { top: 0, left: 0, width: 0, height: 0 };
+    }
     const rect = element.getBoundingClientRect();
     return {
       top: rect.top + window.scrollY,
@@ -28,8 +37,8 @@ const OverlayBar = ({
       width: rect.width,
       height: rect.height,
     };
-  }, [itemId]);
-  
+  }, [getTargetElement]);
+
   useEffect(() => {
     let animationFrameId;
 
@@ -53,10 +62,10 @@ const OverlayBar = ({
 
     updatePosition(); // Initial update
 
-    const element = document.getElementById(itemId);
+    const element = getTargetElement();
     if (!element) {
       const observer = new MutationObserver(() => {
-        const element = document.getElementById(itemId);
+        const element = getTargetElement();
         if (element) {
           updatePosition();
         }
@@ -108,16 +117,16 @@ const OverlayBar = ({
       window.removeEventListener("resize", updatePosition);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [getPosition, itemId, isVisible]);
+  }, [getPosition, itemId, isVisible, getTargetElement]);
 
   const border = (() => {
-    if (isHovering) return "2px solid red";              // This one is hovered
+    if (isHovering) return "2px solid red"; // This one is hovered
     if (hoveredItemId && hoveredItemId !== itemId) {
-      return "none";                                     // Another one is hovered
+      return "none"; // Another one is hovered
     }
-    return isVisible ? "2px solid #007bff" : "2px dashed #ccc";  // Normal fallback
+    return isVisible ? "2px solid #007bff" : "2px dashed #ccc"; // Normal fallback
   })();
-  
+
   const overlayStyle = {
     position: "fixed",
     top: `${pos.top}px`,
@@ -125,7 +134,7 @@ const OverlayBar = ({
     width: `${pos.width}px`,
     height: `${pos.height}px`,
     border,
-  transition: "border 0.2s ease",
+    transition: "border 0.2s ease",
 
     zIndex: 10,
     pointerEvents: "none",

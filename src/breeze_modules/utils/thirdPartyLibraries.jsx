@@ -11,6 +11,9 @@ import * as mui_private_theming from "@mui/private-theming";
 import * as _3d_force_graph from "3d-force-graph";
 import * as react_error_boundary from "react-error-boundary";
 import * as react_bootstrap from "react-bootstrap";
+import * as mui_material from "@mui/material";
+import * as emotion_styled from "@emotion/styled";
+import * as react_chartjs_2 from "react-chartjs-2";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 
@@ -27,5 +30,8 @@ export const libraries = {
     "@mui/private-theming": mui_private_theming,
     "3d-force-graph": _3d_force_graph,
     "react-error-boundary": react_error_boundary,
-    "react-bootstrap": react_bootstrap
+    "react-bootstrap": react_bootstrap,
+    "@mui/material": mui_material,
+    "@emotion/styled": emotion_styled,
+    "react-chartjs-2": react_chartjs_2
 };
