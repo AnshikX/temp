@@ -1,44 +1,67 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-
-const Main = () => {
-  const ref = useRef();
-
+import { React } from "react";
+import { Chart } from "react-chartjs-2";
+import { Button } from "react-bootstrap";
+const Main = ({ prop1 }) => {
+  const data = {
+    labels: ["Red", "Blue", "Yellow"],
+    datasets: [
+      {
+        label: "Votes",
+        data: [12, 19, 3],
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.6)",
+          "rgba(54, 162, 235, 0.6)",
+          "rgba(255, 206, 86, 0.6)",
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+  const type = "pie";
   return (
-    <>
-      <div ref={ref} style={{ display: "contents" }} id="contents">
-        <div className="bg-dark" style={{ height: "200px" }}></div>
-      </div>
-      <Portal parentRef={ref} />
-    </>
+    <div>
+      <Chart
+        data={{
+          labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+          datasets: [
+            {
+              label: "# of Votes",
+              data: [12, 19, 3, 5, 2, 3],
+              backgroundColor: [
+                "rgba(255, 99, 132, 0.5)",
+                "rgba(54, 162, 235, 0.5)",
+                "rgba(255, 206, 86, 0.5)",
+                "rgba(75, 192, 192, 0.5)",
+                "rgba(153, 102, 255, 0.5)",
+                "rgba(255, 159, 64, 0.5)",
+              ],
+            },
+          ],
+        }}
+        type={"bar"}
+      />
+      <Button />
+    </div>
   );
 };
-
-const Portal = ({ parentRef }) => {
-  const ref = useRef(null);
-  const [style, setStyle] = useState({});
-
-  useLayoutEffect(() => {
-    const child = parentRef.current?.firstElementChild;
-    if (ref.current && child) {
-      const rect = child.getBoundingClientRect();
-      setStyle({
-        position: "absolute",
-        top: rect.top + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-        height: rect.height,
-        background: "rgba(255, 0, 0, 0.5)", // to visualize overlay
-        pointerEvents: "none", // so it doesn't block clicks
-      });
-    }
-  }, [parentRef]);
-
-  return createPortal(
-    <div ref={ref} style={style}>
-
-    </div>,
-    document.body // Prefer document.body for absolute overlays
-  );
-};
+import { ArcElement } from "chart.js";
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+);
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+/* Register components globally */
 export default Main;

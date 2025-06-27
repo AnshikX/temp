@@ -1,37 +1,27 @@
 import { React } from "react";
-import { Container } from "react-bootstrap";
-import { Row } from "react-bootstrap";
-import { Col } from "react-bootstrap";
-import { CalendarInput } from "/src/breeze_modules/breeze_components";
-import D from "/src/components/d.jsx";
+import { Chart } from "react-chartjs-2";
 const Hhhh = () => {
   return (
-    <Container className={"p-3"}>
-      <Row />
-      <Col />
-      <div className={"row"} style={{ width: "20px" }} />
-      <D />
-      <div className={"col"} />
-      {undefined ? (
-        <></>
-      ) : (
-        <>
-          <CalendarInput
-            format={"dd/MM/yyyy"}
-            id={"calendar-input"}
-            labelPosition={"left"}
-            labelText={"Select Date:"}
-          />
-        </>
-      )}
-      {undefined.map((item) => {
-        return (
-          <>
-            <CalendarInput />
-          </>
-        );
-      })}
-    </Container>
+    <Chart
+      data={{
+        labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+        datasets: [
+          {
+            label: "# of Votes",
+            data: [12, 19, 3, 5, 2, 3],
+            backgroundColor: [
+              "rgba(255, 99, 132, 0.5)",
+              "rgba(54, 162, 235, 0.5)",
+              "rgba(255, 206, 86, 0.5)",
+              "rgba(75, 192, 192, 0.5)",
+              "rgba(153, 102, 255, 0.5)",
+              "rgba(255, 159, 64, 0.5)",
+            ],
+          },
+        ],
+      }}
+      type={"bar"}
+    />
   );
 };
 export default Hhhh;

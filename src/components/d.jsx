@@ -33,7 +33,6 @@ const D = () => {
           letterSpacing: "0.5px",
           textAlign: "left",
           userSelect: "none",
-          pointerEvents: "auto",
           cursor: "pointer",
           visibility: "visible",
           opacity: 1,
