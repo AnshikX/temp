@@ -851,6 +851,11 @@ const entityDetails = {
     "from": "/src/services/Breeze API/environment.jsx",
     "default": false
   },
+  "c40c347e_7db5_4b51_9791_d7f74ca00b3e": {
+    "exportedAs": "Mui",
+    "from": "/src/components/MUI.jsx",
+    "default": true
+  },
   "c696ba52_4fe6_43f9_bb5b_3c72b243faf8": {
     "exportedAs": "tokenAuthLogin",
     "from": "/src/services/Breeze API/authApis.jsx",
@@ -988,7 +993,7 @@ const entityDetails = {
   },
   "e0d9bec9_7de7_48e7_a11d_cbc087fb1d9c": {
     "exportedAs": "Hhhh",
-    "from": "/src/components/hhhh.jsx",
+    "from": "/src/components/Chart.jsx",
     "default": true
   },
   "e15f8cea_15fb_4048_b059_06f22924e12a": {

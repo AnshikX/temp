@@ -40,6 +40,19 @@ const normalizeAttributes = (attrs = {}) => {
   return normalized;
 };
 
+const getLibraryKey = (libNameWithVersion) => {
+  if (!libNameWithVersion || typeof libNameWithVersion !== "string") return null;
+
+  if (libNameWithVersion === "bootstrap-icons") return null;
+
+  if (libNameWithVersion.startsWith("@")) {
+    const match = libNameWithVersion.match(/^(@[^/]+\/[^@]+)(?:@.+)?$/);
+    return match ? match[1] : null; // → "@mui/material"
+  }
+
+  return libNameWithVersion.split("@")[0]; // → "react-bootstrap"
+};
+
 const SwitchRenderer = ({
   item,
   children,
@@ -67,7 +80,17 @@ const SwitchRenderer = ({
 
   const boundaryProps = {
     FallbackComponent: (props) => (
-      <FallbackWithReload {...props} resetErrorBoundary={forceRerender}>
+      <FallbackWithReload
+        resetErrorBoundary={forceRerender}
+        id={item.id}
+        zbase={zbase}
+        opacity={opacity}
+        onClick={handleSelect}
+        onMouseOver={handleMouseOver}
+        onMouseOut={handleMouseOut}
+        drag={drag}
+        {...props}
+      >
         {processedChildren}
       </FallbackWithReload>
     ),
@@ -100,7 +123,13 @@ const SwitchRenderer = ({
       if (item.elementType === "THIRD_PARTY") {
         async function loadThirdPartyComponent() {
           try {
-            const module = await libraries[item.library.split("@")[0]];
+            const libKey = getLibraryKey(item.library);
+            if (!libKey || !libraries[libKey]) {
+              console.error("Library not found or skipped:", item.library);
+              return;
+            }
+            
+            const module = await libraries[libKey];
             const component = module[item.tagName];
             if (!component) {
               console.error(
@@ -137,50 +166,23 @@ const SwitchRenderer = ({
     }
   }, [item, item.$ref, item.elementType, item.id, item.library, item.tagName]);
 
-  // if (item.elementType === "COMPONENT" || item.tagName === "fragment") {
-  //   return (
-  //     <div
-  //       id={item.id}
-  //       style={{ opacity }}
-  //       onClick={handleSelect}
-  //       onMouseOver={handleMouseOver}
-  //       onMouseOut={handleMouseOut}
-  //       ref={(node) => drag(node)}
-  //     >
-  //       {importedComponent.isLoaded ? (
-  //         <ErrorBoundary {...boundaryProps}>
-  //           {item.tagName === "fragment"
-  //             ? processedChildren
-  //             : React.createElement(
-  //                 importedComponent.component,
-  //                 { ...normalizedAttributes },
-  //                 processedChildren
-  //               )}
-  //         </ErrorBoundary>
-  //       ) : importedComponent.error ? (
-  //         <>Deleteded Component{processedChildren}</>
-  //       ) : (
-  //         <>Loading...</>
-  //       )}
-  //     </div>
-  //   );
-  // }
   if (item.elementType === "THIRD_PARTY" || item.elementType === "COMPONENT") {
     return importedComponent.isLoaded ? (
       <ErrorBoundary {...boundaryProps}>
-        <OverlayRenderer drag={drag} zbase={zbase+1} onClick={handleSelect} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut} itemId = {item.id} id={"overlay-" + item.id}>
+        <OverlayRenderer
+          drag={drag}
+          zbase={zbase + 1}
+          onClick={handleSelect}
+          onMouseOver={handleMouseOver}
+          onMouseOut={handleMouseOut}
+          itemId={item.id}
+        >
           {item.tagName === "fragment"
             ? processedChildren
             : React.createElement(
                 importedComponent.component || item.tagName || "div",
                 {
                   ...normalizedAttributes,
-                  id: item.id,
-                  // style: item.appliedStyles,
-                  // onClick: handleSelect,
-                  // onMouseOver: handleMouseOver,
-                  // onMouseOut: handleMouseOut,
-                  // ref: (node) => drag(node),
                 },
                 processedChildren
               )}
@@ -220,7 +222,12 @@ const SwitchRenderer = ({
     {
       ...normalizedAttributes,
       ...nulledEventAttrs,
-      style: {...item.appliedStyles, opacity, zIndex: zbase, position: "relative"},
+      style: {
+        ...item.appliedStyles,
+        opacity,
+        zIndex: zbase,
+        position: "relative",
+      },
       onClick: handleSelect,
       onMouseOver: handleMouseOver,
       onMouseOut: handleMouseOut,

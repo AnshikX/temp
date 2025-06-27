@@ -6,29 +6,36 @@ export const OverlayRenderer = ({
   drag,
   zbase = 0,
   itemId,
-  id,
   ...props
 }) => {
   const ref = useRef();
-  const el = document.getElementById(itemId);
-  if (el) {
-    const computedHeight = window.getComputedStyle(el).height;
-    if (computedHeight <= "0px") {
-      el.style.height = "10px";
+
+  setTimeout(() => {
+    const el = document.getElementById("contents-" + itemId)?.nextSibling;
+
+    if (el) {
+      const computedHeight = window.getComputedStyle(el).height;
+      if (computedHeight <= "0px") {
+        el.style.height = "10px";
+      }
     }
-  }
+  }, 0);
 
   return (
     <>
-      <div ref={ref} style={{ display: "contents" }}>
-        {children}
-      </div>
+      <div
+        ref={ref}
+        id={"contents-" + itemId}
+        style={{ display: "none" }}
+      ></div>
+      {children}
+
       <OverlayPill
         sibilingRef={ref}
         zbase={zbase}
         drag={drag}
         {...props}
-        id={id}
+        id={itemId}
       />
     </>
   );
@@ -38,25 +45,23 @@ const OverlayPill = ({ sibilingRef, drag, zbase, id, ...props }) => {
   const [pos, setPos] = useState(null);
 
   useEffect(() => {
-    const updatePos = () => {
-      if (sibilingRef.current) {
-        const rect =
-          sibilingRef.current?.firstElementChild?.getBoundingClientRect();
-        setPos({
-          top: rect.top,
-          left: rect.left,
-          width: rect.width,
-          height: rect.height,
-        });
-      }
-    };
-    const timeoutId = setTimeout(updatePos, 500);
+    const el = sibilingRef.current?.nextSibling;
+    if (!el || !(el instanceof HTMLElement)) return;
 
-    const targetEl = sibilingRef.current?.firstElementChild;
-    if (!targetEl) return;
+    const updatePos = () => {
+      const rect = el.getBoundingClientRect();
+      setPos({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+      });
+    };
+
+    updatePos();
 
     const resizeObserver = new ResizeObserver(updatePos);
-    resizeObserver.observe(targetEl);
+    resizeObserver.observe(el);
 
     const mutationObserver = new MutationObserver(updatePos);
     mutationObserver.observe(document.body, {
@@ -68,7 +73,6 @@ const OverlayPill = ({ sibilingRef, drag, zbase, id, ...props }) => {
     window.addEventListener("resize", updatePos);
 
     return () => {
-      clearTimeout(timeoutId);
       resizeObserver.disconnect();
       mutationObserver.disconnect();
       window.removeEventListener("scroll", updatePos, true);
@@ -76,13 +80,11 @@ const OverlayPill = ({ sibilingRef, drag, zbase, id, ...props }) => {
     };
   }, [sibilingRef]);
 
-  if (!pos) {
-    return null;
-  }
+  if (!pos) return null;
 
   return (
     <div
-      id={id}
+      data-overlay-id={id}
       style={{
         position: "fixed",
         top: pos.top,
@@ -91,7 +93,6 @@ const OverlayPill = ({ sibilingRef, drag, zbase, id, ...props }) => {
         height: pos.height,
         zIndex: zbase + 3,
         pointerEvents: "auto",
-        cursor: "grab",
       }}
       {...props}
       ref={(node) => drag(node)}
