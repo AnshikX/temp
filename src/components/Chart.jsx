@@ -21,7 +21,6 @@ const Hhhh = () => {
   return (
     <div className={"p-2"}>
       <Chart
-        type={"bar"}
         data={{
           labels: ["Red", "Blue", "Yellow"],
           datasets: [
@@ -37,6 +36,12 @@ const Hhhh = () => {
             },
           ],
         }}
+        type={"bar"}
+        style={{ width: "717.99658203125px", height: "392.98614501953125px" }}
+      />
+      <div
+        className={"row"}
+        style={{ width: "300px", height: "23.95833396911621px" }}
       />
     </div>
   );

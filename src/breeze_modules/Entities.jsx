@@ -851,6 +851,11 @@ const entityDetails = {
     "from": "/src/services/Breeze API/environment.jsx",
     "default": false
   },
+  "c2c53486_f72a_4b0e_9796_b3af7f0af28e": {
+    "exportedAs": "Props",
+    "from": "/src/components/Props.jsx",
+    "default": true
+  },
   "c40c347e_7db5_4b51_9791_d7f74ca00b3e": {
     "exportedAs": "Mui",
     "from": "/src/components/MUI.jsx",
