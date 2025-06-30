@@ -10,16 +10,13 @@ export const OverlayRenderer = ({
 }) => {
   const ref = useRef();
 
-  setTimeout(() => {
-    const el = document.getElementById("contents-" + itemId)?.nextSibling;
-
-    if (el) {
-      const computedHeight = window.getComputedStyle(el).height;
-      if (computedHeight <= "0px") {
-        el.style.height = "10px";
-      }
+  const el = document.getElementById("contents-" + itemId)?.nextSibling;
+  if (el) {
+    const computedHeight = window.getComputedStyle(el).height;
+    if (parseFloat(computedHeight) <= 0) {
+      el.style.height = "10px";
     }
-  }, 0);
+  }
 
   return (
     <>

@@ -98,6 +98,20 @@ const Renderer = ({
     [isSelected]
   );
 
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data?.source === "LayersEditor") {
+        const { action, nodeId } = event.data;
+        if (action === "deleteItem" && nodeId === item.id) {
+          handleDelete();
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [item.id, handleDelete]);
+
   if (!isVisible) {
     return null;
   }
@@ -106,7 +120,7 @@ const Renderer = ({
       {!isPreview && addSibling && (
         <DropZone
           onDrop={(draggedItem) => handleDrop(draggedItem, 0)}
-          position="top"  
+          position="top"
           heirarchy={firstDropZoneHeriarchy}
           zbase={zbase}
           ownerId={parentId}
@@ -222,7 +236,7 @@ Renderer.propTypes = {
   handleDelete: PropTypes.func,
   overDetails: PropTypes.object,
   zbase: PropTypes.number,
-  parentId: PropTypes.string
+  parentId: PropTypes.string,
 };
 
 export default Renderer;

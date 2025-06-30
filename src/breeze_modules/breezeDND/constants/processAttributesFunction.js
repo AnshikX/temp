@@ -16,13 +16,21 @@ export const getValue = (conf) => {
   } else if (conf.type === "UNDEFINED") {
     return undefined;
   } else if (conf.type === "BOOLEAN") {
-    return conf.value && conf.value != "FALSE";
+    return conf.value && conf.value !== "FALSE";
   } else if (conf.type === "NULL") {
     return null;
   } else if (conf.type === "CUSTOM") {
-    // this is just a fallback, shouldn't use it
-    return eval(`(${conf.value})`);
+    if (typeof conf.value === "object") return conf.value;
+
+    // shouldn't use this
+    try {
+      return eval(`(${conf.value})`);
+    } catch (err) {
+      console.error("Failed to evaluate CUSTOM conf.value", conf.value, err);
+      return undefined;
+    }
   } else {
-    console.log(conf);
+    console.warn("Unknown config type:", conf);
+    return undefined;
   }
 };
