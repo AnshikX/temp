@@ -1,7 +1,7 @@
 import { React } from "react";
 const Props = () => {
   return (
-    <div>
+    <div className={"fe"}>
       Hello world
       <div onChange={undefined} onClick={undefined} />
     </div>
