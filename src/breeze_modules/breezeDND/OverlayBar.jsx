@@ -1,36 +1,69 @@
-import { useCallback, useEffect, useState } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
-import deleteButton from "./assets/svgs/delete-button.svg";
+import { usePushChanges } from "./contexts/UndoRedoContext";
+import { useSelectedItemId } from "./contexts/SelectionContext";
+import deepCopy from "./../utils/deepcopy";
+import useResizableOverlay from "./hooks/useResizableOverlay";
 import { useVisibility } from "./contexts/VisibilityContext";
+import ResizerHandles from "./elements/ResizerHandles";
+import OverlayToolbar from "./elements/OverlayToolbar";
 
 const OverlayBar = ({
-  itemId,
   itemLabel,
   onDelete,
   isVisible,
   setIsHovered,
   isFirst,
   overDetails,
+  item,
+  updateItem,
 }) => {
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
-
+  const overlayRef = useRef(null);
+  const selectedItemId = useSelectedItemId();
+  const { pushChanges } = usePushChanges();
   const { hoveredItemId } = useVisibility();
-  const isHovering = hoveredItemId === itemId;
+  const isHovering = hoveredItemId === item.id;
+
+  const [currentItem, setCurrentItem] = useState(item);
+  const previousConfigRef = useRef(deepCopy(currentItem));
+
+  const updateCurrentItem = useCallback(
+    (stateOrUpdater) => {
+      setCurrentItem((prev) => {
+        const next =
+          typeof stateOrUpdater === "function"
+            ? stateOrUpdater(prev)
+            : stateOrUpdater;
+
+        const undoTo = deepCopy(previousConfigRef.current);
+        previousConfigRef.current = deepCopy(next);
+
+        setTimeout(() => {
+          pushChanges({
+            doChanges: updateCurrentItem.bind(null, undoTo),
+          });
+        }, 0);
+
+        updateItem(next);
+        return next;
+      });
+    },
+    [updateItem, pushChanges]
+  );
 
   const getTargetElement = useCallback(() => {
     return (
-      document.getElementById(itemId) ||
-      document.querySelector(`[data-overlay-id="${itemId}"]`)
+      document.getElementById(item.id) ||
+      document.querySelector(`[data-overlay-id="${item.id}"]`)
     );
-  }, [itemId]);
+  }, [item.id]);
 
   const getPosition = useCallback(() => {
-    const element = getTargetElement();
-    if (!element) {
-      return { top: 0, left: 0, width: 0, height: 0 };
-    }
-    const rect = element.getBoundingClientRect();
+    const el = getTargetElement();
+    if (!el) return { top: 0, left: 0, width: 0, height: 0 };
+    const rect = el.getBoundingClientRect();
     return {
       top: rect.top + window.scrollY,
       left: rect.left + window.scrollX,
@@ -43,55 +76,46 @@ const OverlayBar = ({
     let animationFrameId;
 
     const updatePosition = () => {
-      setPos((prevPos) => {
-        const newPos = getPosition();
-
-        // Keep updating until the final position is stable
+      setPos((prev) => {
+        const next = getPosition();
         if (
-          prevPos.top !== newPos.top ||
-          prevPos.left !== newPos.left ||
-          prevPos.width !== newPos.width ||
-          prevPos.height !== newPos.height
+          prev.top !== next.top ||
+          prev.left !== next.left ||
+          prev.width !== next.width ||
+          prev.height !== next.height
         ) {
           animationFrameId = requestAnimationFrame(updatePosition);
-          return newPos;
+          return next;
         }
-        return prevPos;
+        return prev;
       });
     };
 
-    updatePosition(); // Initial update
+    updatePosition();
 
-    const element = getTargetElement();
-    if (!element) {
+    const el = getTargetElement();
+    if (!el) {
       const observer = new MutationObserver(() => {
-        const element = getTargetElement();
-        if (element) {
-          updatePosition();
-        }
+        const el = getTargetElement();
+        if (el) updatePosition();
       });
       observer.observe(document.body, { childList: true, subtree: true });
       return () => observer.disconnect();
     }
 
-    // Observe any mutations in the item's subtree
     const mutationObserver = new MutationObserver(updatePosition);
-    mutationObserver.observe(element, {
+    const resizeObserver = new ResizeObserver(updatePosition);
+    const intersectionObserver = new IntersectionObserver(updatePosition);
+
+    mutationObserver.observe(el, {
       attributes: true,
       characterData: true,
       subtree: true,
       childList: true,
     });
+    resizeObserver.observe(el);
+    intersectionObserver.observe(el);
 
-    // Observe resizing
-    const resizeObserver = new ResizeObserver(updatePosition);
-    resizeObserver.observe(element);
-
-    // Observe visibility changes
-    const intersectionObserver = new IntersectionObserver(updatePosition);
-    intersectionObserver.observe(element);
-
-    // Update on animations
     const handleAnimation = () => {
       updatePosition();
       animationFrameId = requestAnimationFrame(updatePosition);
@@ -101,7 +125,6 @@ const OverlayBar = ({
     document.body.addEventListener("animationiteration", handleAnimation);
     document.body.addEventListener("animationend", handleAnimation);
     document.body.addEventListener("transitionend", handleAnimation);
-
     window.addEventListener("scroll", updatePosition, true);
     window.addEventListener("resize", updatePosition);
 
@@ -117,74 +140,69 @@ const OverlayBar = ({
       window.removeEventListener("resize", updatePosition);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [getPosition, itemId, isVisible, getTargetElement]);
+  }, [getPosition, getTargetElement, item.id, isVisible]);
 
-  const border = (() => {
-    if (isHovering) return "2px solid red"; // This one is hovered
-    if (hoveredItemId && hoveredItemId !== itemId) {
-      return "none"; // Another one is hovered
-    }
-    return isVisible ? "2px solid #007bff" : "2px dashed #ccc"; // Normal fallback
-  })();
+  const { overrideSize, startResize } = useResizableOverlay({
+    overlayRef,
+    item,
+    updateCurrentItem,
+  });
 
   const overlayStyle = {
     position: "fixed",
     top: `${pos.top}px`,
     left: `${pos.left}px`,
-    width: `${pos.width}px`,
-    height: `${pos.height}px`,
-    border,
+    width:
+      overrideSize.width !== null
+        ? `${overrideSize.width}px`
+        : `${pos.width}px`,
+    height:
+      overrideSize.height !== null
+        ? `${overrideSize.height}px`
+        : `${pos.height}px`,
+    border: isHovering
+      ? "2px solid red"
+      : hoveredItemId && hoveredItemId !== item.id
+      ? "none"
+      : isVisible
+      ? "2px solid #007bff"
+      : "2px dashed #ccc",
     transition: "border 0.2s ease",
-
     zIndex: 10,
     pointerEvents: "none",
+    display: pos.width === 0 || pos.height === 0 ? "none" : "block",
   };
-
-  if (pos.width === 0 || pos.height === 0) {
-    overlayStyle.display = "none";
-  }
-
-  const toolbarStyle = {
-    position: "fixed",
-    top: `${pos.top - 34}px`,
-    left: `${pos.left}px`,
-    background: "#2680eb",
-    color: "white",
-    padding: "5px 10px",
-    borderRadius: "5px",
-    zIndex: 11,
-    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
-    display: "flex",
-    gap: "10px",
-    alignItems: "center",
-  };
-
   return createPortal(
     <>
       <div
+        ref={overlayRef}
         style={overlayStyle}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-      ></div>
+      >
+        <ResizerHandles
+          isVisible={
+            selectedItemId === item.id &&
+            (item.elementType !== "TEXT" &&
+              item.elementType !== "BREEZE_COMPONENT" &&
+              item.elementType !== "THIRD_PARTY" &&
+              item.elementType !== "COMPONENT")
+          }
+          pos={pos}
+          startResize={startResize}
+        />
+      </div>
+
       {isVisible && (
-        <div
-          style={toolbarStyle}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          <span>
-            {overDetails?.label || itemLabel || "Unnamed Item"}{" "}
-            {overDetails && overDetails.labelSuffix}
-          </span>
-          {!isFirst && (
-            <img
-              src={deleteButton}
-              alt="Delete"
-              style={{ width: "15px", cursor: "pointer", height: "15px" }}
-              onClick={onDelete}
-            />
-          )}
-        </div>
+        <OverlayToolbar
+          top={pos.top}
+          left={pos.left}
+          label={overDetails?.label || itemLabel}
+          labelSuffix={overDetails?.labelSuffix}
+          onDelete={onDelete}
+          isFirst={isFirst}
+          onHover={setIsHovered}
+        />
       )}
     </>,
     document.body

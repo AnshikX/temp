@@ -9,7 +9,7 @@ import PropTypes from "prop-types";
 import DropZone from "../DropZone";
 import Renderer from "../Renderer";
 import { useSelectedItemId, useSetters } from "../contexts/SelectionContext";
-import { getValue } from "../constants/processAttributesFunction";
+import { getValue } from "../utils/processAttributesFunction";
 import SwitchRenderer from "./SwitchRenderer";
 import { usePushChanges } from "../contexts/UndoRedoContext";
 import deepCopy from "../../utils/deepcopy";
@@ -62,9 +62,9 @@ const CombinedRenderer = ({
     [updateItem, pushChanges]
   );
 
-  // useEffect(() => {
-  //   setCurrentItem(config);
-  // }, [config]);
+  useEffect(() => {
+    setCurrentItem(config); 
+  }, [config]);
 
   useEffect(() => {
     if (selectedItemId === currentItem.id) {

@@ -41,7 +41,8 @@ const normalizeAttributes = (attrs = {}) => {
 };
 
 const getLibraryKey = (libNameWithVersion) => {
-  if (!libNameWithVersion || typeof libNameWithVersion !== "string") return null;
+  if (!libNameWithVersion || typeof libNameWithVersion !== "string")
+    return null;
 
   if (libNameWithVersion === "bootstrap-icons") return null;
 
@@ -128,7 +129,7 @@ const SwitchRenderer = ({
               console.error("Library not found or skipped:", item.library);
               return;
             }
-            
+
             const module = await libraries[libKey];
             const component = module[item.tagName];
             if (!component) {
@@ -207,7 +208,9 @@ const SwitchRenderer = ({
             ? processedChildren
             : React.createElement(
                 importedComponent.component || item.tagName || "div",
-                normalizedAttributes,
+                {
+                  ...normalizedAttributes,
+                },
                 processedChildren
               )}
         </ErrorBoundary>

@@ -196,6 +196,11 @@ const entityDetails = {
     "from": "/src/services/Breeze API/routes.jsx",
     "default": false
   },
+  "2a03c1f4_3e0d_4043_8257_86df4fe1ed04": {
+    "exportedAs": "Resize",
+    "from": "/src/components/Resize.jsx",
+    "default": true
+  },
   "2a33c59d_aed3_455a_8e8f_56c0e6004d62": {
     "exportedAs": "directoryGetCodeRetrieve",
     "from": "/src/services/Breeze API/directory.jsx",

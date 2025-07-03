@@ -11,7 +11,7 @@ export const getValue = (conf) => {
     return conf.values.map((val) => getValue(val));
   } else if (conf.type === "STRING") {
     return conf.value?.trim() ?? "";
-  } else if (conf.type === "NUMBER") {
+  } else if (conf.type === "NUMBER" || conf.type === "NUMERIC") {
     return Number(conf.value);
   } else if (conf.type === "UNDEFINED") {
     return undefined;
