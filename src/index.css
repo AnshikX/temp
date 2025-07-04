@@ -1,3 +1,7 @@
+.bg {
+  background-color: black;
+}
+
 .custom {
   display: "contents";
 }
@@ -5,4 +9,7 @@
 .fe {
   background-color: "red";
   color: "blue";
+}
+
+.fre {
 }
