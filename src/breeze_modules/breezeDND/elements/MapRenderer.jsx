@@ -10,6 +10,7 @@ import Renderer from "../Renderer";
 import { useSelectedItemId, useSetters } from "../contexts/SelectionContext";
 import deepCopy from "../../utils/deepcopy";
 import { usePushChanges } from "../contexts/UndoRedoContext";
+import { useMetaConfig } from "../contexts/MetaConfigContext";
 
 const extractConfig = (filteredParts, item) => {
   let target = item;
@@ -37,13 +38,14 @@ const MapRendererX = ({
   const { setItemDetails } = useSetters();
   const selectedItemId = useSelectedItemId();
   const { pushChanges } = usePushChanges();
+  const { fullMetaConfig } = useMetaConfig();
 
   const ref = useRef([]);
+
   const previousConfigRef = useRef(deepCopy(currentItem));
 
   const updateCurrentItem = useCallback(
     (stateOrCallBack) => {
-      console.log('object')
       setCurrentItem((prev) => {
         let next;
         if (typeof stateOrCallBack === "function") {
@@ -75,70 +77,37 @@ const MapRendererX = ({
     }
   }, [selectedItemId, currentItem, setItemDetails, updateCurrentItem]);
 
-  // useEffect(() => {
-  //   let changed = false;
-  //   for (let i = 0; i < configs.length; i++) {
-  //     if (ref.current[i].value !== configs[i]) {
-  //       changed = true;
-  //       ref.current[i].value = configs[i];
-  //     }
-  //   }
-  //   if (changed) {
-  //     updateItem(currentItem );
-  //   }
-  // }, [configs, updateItem, currentItem]);
-
   useEffect(() => {
-    const handleMessage = (event) => {
-      // eslint-disable-next-line no-constant-condition
-      if (event.origin === "http://localhost:3000" || true) {
-        const { type, resource } = event.data;
-        if (type === "resource" && resource.type === "filteredParts") {
-          if (resource.statementId === currentItem.id) {
-            const extractedConfigs = resource.filteredParts.map((parts) =>
-              extractConfig(parts, currentItem)
-            );
-            const configs = [];
-            extractedConfigs.forEach((element, i) => {
-              ref.current[i] = element;
-              configs[i] = element.value;
-            });
-            setConfigs(configs);
-          }
-        }
-        if (type === "resource" && resource.type === "updateItem") {
-          if (resource.itemConfig?.id === currentItem.id) {
-            updateCurrentItem((prev) => ({
-              ...prev,
-              ...resource.itemConfig,
-              bodyConfig: prev.bodyConfig,
-            }));
-          }
-        }
+    const meta = fullMetaConfig?.[currentItem.id];
+    if (meta?.returnStatements?.length) {
+      const metaParts = meta.index?.split("<>") || [];
+
+      const filteredPointers = meta.returnStatements.map((stmt) => {
+        const returnParts = stmt.index?.split("<>") || [];
+        const path = stmt.index.startsWith(meta.index)
+          ? returnParts.slice(metaParts.length)
+          : returnParts;
+        return extractConfig(path, currentItem); // ← pointer with `.value`
+      });
+
+      ref.current = filteredPointers;
+
+      const filteredConfigs = filteredPointers.map((pointer) => pointer?.value);
+      setConfigs(filteredConfigs.filter(Boolean));
+    } else {
+      const fallbackPointer = extractConfig(
+        ["bodyConfig", "statements", "0"],
+        currentItem
+      );
+      if (fallbackPointer) {
+        ref.current = [fallbackPointer];
+        setConfigs(fallbackPointer.value ? [fallbackPointer.value] : []);
+      } else {
+        ref.current = [];
+        setConfigs([]);
       }
-    };
-
-    window.parent.postMessage(
-      { source: "APP", type: "request", request: { type: "metaConfig" } },
-      "*"
-    );
-
-    window.addEventListener("message", handleMessage);
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, [currentItem, updateCurrentItem]);
-
-  useEffect(() => {
-    window.parent.postMessage(
-      {
-        source: "APP",
-        type: "request",
-        request: { type: "metaConfig", statementId: currentItem.id },
-      },
-      "*"
-    );
-  }, [currentItem.id]);
+    }
+  }, [currentItem, fullMetaConfig]);
 
   const stableHeirarchy = useMemo(
     () => [...heirarchy, ...configs.map((config) => config?.id)],
@@ -146,13 +115,12 @@ const MapRendererX = ({
   );
 
   function updateConfigs(index, updatedConfig) {
-    setConfigs((prev) => {
-      prev[index] = updatedConfig;
-      ref.current[index].value = updatedConfig;
+    if (!ref.current[index]) return;
 
-      updateItem(currentItem);
-      return prev;
-    });
+    ref.current[index].value = updatedConfig;
+
+    // Trigger currentItem update (this may be required to reflect new data)
+    updateCurrentItem((prev) => ({ ...prev }));
   }
 
   if (configs.length === 0) return null;
@@ -197,7 +165,7 @@ MapRendererX.propTypes = {
   updateItem: PropTypes.func.isRequired,
   heirarchy: PropTypes.array.isRequired,
   isPreview: PropTypes.bool.isRequired,
-  zbase: PropTypes.number.isRequired
+  zbase: PropTypes.number.isRequired,
 };
 
 export default React.memo(MapRendererX);

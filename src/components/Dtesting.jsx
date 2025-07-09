@@ -38,6 +38,7 @@ const Dtesting = () => {
         style={{ borderCollapse: "collapse", width: "50%", margin: "20px" }}
       >
         <thead style={{ width: "179px" }}>
+          Delete
           <tr>
             {["1", "2", "3"].map((item) => {
               return (
@@ -104,9 +105,7 @@ const Dtesting = () => {
                         borderRadius: "4px",
                         cursor: "pointer",
                       }}
-                    >
-                      Delete
-                    </button>
+                    />
                   </td>
                 </tr>
               </>
@@ -114,6 +113,13 @@ const Dtesting = () => {
           })}
         </tbody>
       </table>
+      {undefined ? (
+        <>
+          <div className={"col"} />
+        </>
+      ) : (
+        <></>
+      )}
     </div>
   );
 };

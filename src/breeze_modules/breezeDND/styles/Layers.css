@@ -1,0 +1,38 @@
+.brDnd-layers-treeItem {
+  width: 100%;
+  padding: 8px;
+  border-bottom: 2px solid var(--brDnd-color-primary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.brDnd-layers-treeItem:not(.selected):hover {
+  background: var(--brDnd-color-subtext);
+}
+
+.brDnd-layers-treeItem .label-container {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.brDnd-layers-treeItem .label-container span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+}
+
+.brDnd-layers-treeItem .actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+}

@@ -14,7 +14,7 @@ export const SidebarSection = ({ title, open, items }) => {
 
   return (
     <div
-      className="mb-2 accordion-item brDnd-accordion"
+      className="mb-2 accordion-item brDnd-background-primary brDnd-color-text"
       style={{ border: "none" }}
     >
       <div

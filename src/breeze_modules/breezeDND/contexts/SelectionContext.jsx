@@ -54,21 +54,6 @@ export const SelectionProvider = ({ children }) => {
     );
   }, [itemDetails]);
 
-  useEffect(() => {
-    const handleMessage = (event) => {
-      if (event.data?.source === "LayersEditor") {
-        const { action, nodeId } = event.data;
-        if (action === "setSelectedItemId") {
-          setSelectedItemId(nodeId);
-        }
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
-
   return (
     <SelectedItemIdContext.Provider value={selectedItemId}>
       <SelectedItemIdSetterContext.Provider value={setSelectedItemId}>

@@ -197,7 +197,6 @@ const Renderer = ({
       {!isPreview && (
         <OverlayBar
           item={item}
-          itemId={item.id}
           updateItem={updateItem}
           itemLabel={item.label || item.tagName || item.elementType}
           onDelete={handleDelete}

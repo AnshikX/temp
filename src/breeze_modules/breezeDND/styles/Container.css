@@ -1,3 +1,19 @@
+.brDnd-background-primary {
+  background-color: var(--brDnd-color-primary);
+}
+
+.brDnd-background-secondary {
+  background-color: var(--brDnd-color-secondary);
+}
+
+.brDnd-color-text {
+  color: var(--brDnd-color-text);
+}
+
+.brDnd-color-primary {
+  color: var(--brDnd-color-primary);
+}
+
 .brDnd-body {
   display: flex;
   flex-direction: row;
@@ -11,8 +27,6 @@
   transition: width 0.3s ease-in-out;
   overflow: auto;
   border-radius: 10px;
-  background-color: var(--brDnd-color-primary);
-  color: var(--brDnd-color-text);
 }
 
 .brDnd-shortcutBar {
@@ -20,8 +34,6 @@
   justify-content: space-between;
   align-items: center;
   height: 4%;
-  background-color: var(--brDnd-color-secondary);
-  color: var(--brDnd-color-text);
 }
 
 /* Button Container */
@@ -45,11 +57,6 @@
 
 .brDnd-toggleButton:hover {
   background-color: #0056b3;
-}
-
-.brDnd-accordion {
-  background-color: var(--brDnd-color-primary);
-  color: var(--brDnd-color-text);
 }
 
 #heading-third-party,
@@ -114,4 +121,25 @@
 
 .no-transition {
   transition: none !important;
+}
+
+.brDnd-sidebar-nav-item {
+  width: auto;
+  padding: 10px;
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 4px solid transparent;
+  background: transparent;
+  white-space: nowrap;     
+  overflow: hidden;        
+  text-overflow: ellipsis;      
+}
+
+.brDnd-sidebar-nav-item:not(.selected):hover {
+  border-bottom: 4px solid #006eb9;
+}
+
+.brDnd-sidebar-nav-item.selected {
+  border-bottom: 4px solid #006eb9;
 }

@@ -145,7 +145,7 @@ const SideBarItem = ({ sidebarItems }) => {
         <SidebarSection title="HTML Elements" open={openSections.html} items={filteredHtmlItems} />
         <SidebarSection title="Components" open={openSections.components} items={filteredComponents} />
 
-        <div className="mb-2 accordion-item brDnd-accordion" style={{ border: "none" }}>
+        <div className="mb-2 accordion-item brDnd-background-primary brDnd-color-text" style={{ border: "none" }}>
           <div className="rounded accordion-header" id="heading-third-party" onClick={handleTileClick} style={{ cursor: "pointer" }}>
             <div className="d-flex justify-content-between align-items-center p-2">
               <span className="fw-medium" style={{ fontSize: "14px" }}>Third Party</span>

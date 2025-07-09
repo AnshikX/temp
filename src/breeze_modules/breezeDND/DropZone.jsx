@@ -27,6 +27,7 @@ const DropZone = ({
   zbase = 0,
   ownerId,
 }) => {
+  console.log(heirarchy)
   const dropZoneRef = useRef();
   const { setHoveredItemId } = useVisibility();
 

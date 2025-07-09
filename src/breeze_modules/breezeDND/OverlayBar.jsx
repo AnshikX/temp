@@ -210,7 +210,8 @@ const OverlayBar = ({
 };
 
 OverlayBar.propTypes = {
-  itemId: PropTypes.string.isRequired,
+  item: PropTypes.object.isRequired,
+  updateItem: PropTypes.func.isRequired,
   itemLabel: PropTypes.string,
   onDelete: PropTypes.func,
   isVisible: PropTypes.bool.isRequired,

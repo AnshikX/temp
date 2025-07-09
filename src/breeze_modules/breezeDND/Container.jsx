@@ -3,9 +3,13 @@ import SideBarItem from "./sidebars/SideBarItem";
 import Renderer from "./Renderer";
 import "./styles/Container.css";
 import { useSetters } from "./contexts/SelectionContext";
-import { useUndoRedo } from "./contexts/UndoRedoContext";
+import { usePushChanges, useUndoRedo } from "./contexts/UndoRedoContext";
 import undoButton from "./assets/svgs/undo-button.svg";
 import redoButton from "./assets/svgs/redo-button.svg";
+import Layers from "./sidebars/Layers";
+import SidebarNavItem from "./sidebars/SidebarNavItem";
+import deepCopy from "../utils/deepcopy";
+import { useMetaConfig } from "./contexts/MetaConfigContext";
 
 const Container = () => {
   const config = useRef({});
@@ -15,11 +19,12 @@ const Container = () => {
     third_party: [],
     widgets: [],
   });
-  useEffect(() => {
-    console.log("FRST TIME");
-  }, []);
+  const [activeSidebarView, setActiveSidebarView] = useState("layers");
+  const { pushChanges } = usePushChanges();
+
   const { setSelectedItemId } = useSetters();
   const [isPreview, setIsPreview] = useState(false);
+  const { setFullMetaConfig } = useMetaConfig();
   const { undoChanges, redoChanges, undoStack, redoStack } = useUndoRedo();
   const trigger = useState(0)[1];
 
@@ -37,6 +42,7 @@ const Container = () => {
           const resource = event.data.resource;
           if (resource.type === "componentConfig") {
             config.current = resource.component;
+            setFullMetaConfig(resource.fullMetaConfig);
             trigger((x) => x + 1);
           }
           if (resource.type === "sidebarItems") {
@@ -73,7 +79,7 @@ const Container = () => {
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, [setSidebarItems, trigger]);
+  }, [setSidebarItems, trigger, setFullMetaConfig]);
 
   const setConfig = useCallback((conf) => {
     window.parent.postMessage(
@@ -94,17 +100,61 @@ const Container = () => {
           document
             .querySelector(".brDnd-rightSidebar")
             ?.contains(event.target) ||
+          document.querySelector(".brDnd-sidebar")?.contains(event.target) ||
           document.getElementById("toolBar").contains(event.target)
         )
       ) {
         setSelectedItemId(null);
       }
     };
+
     document.addEventListener("click", handleClickOutside);
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, [setSelectedItemId]);
+
+  const updateNodeById = (tree, nodeId, updates) => {
+    if (!tree) return tree;
+    if (tree.id === nodeId) {
+      return { ...tree, ...updates };
+    }
+
+    let updatedChildren = tree.children?.map((child) =>
+      updateNodeById(child, nodeId, updates)
+    );
+
+    return {
+      ...tree,
+      ...(updatedChildren ? { children: updatedChildren } : {}),
+      ...(tree.elementType === 'CONDITIONAL'
+        ? {
+            trueCase: updateNodeById(tree.trueCase, nodeId, updates),
+            falseCase: updateNodeById(tree.falseCase, nodeId, updates),
+          }
+        : {}),
+    };
+  };
+
+  const deleteNodeById = (tree, nodeId) => {
+    if (!tree) return null;
+    if (tree.id === nodeId) return null;
+
+    let newChildren = tree.children
+      ?.map((child) => deleteNodeById(child, nodeId))
+      .filter(Boolean);
+
+    return {
+      ...tree,
+      ...(newChildren ? { children: newChildren } : {}),
+      ...(tree.elementType === "CONDITIONAL"
+        ? {
+            trueCase: deleteNodeById(tree.trueCase, nodeId),
+            falseCase: deleteNodeById(tree.falseCase, nodeId),
+          }
+        : {}),
+    };
+  };
 
   const toggle = () => {
     window.parent.postMessage({ source: "APP", action: "TOGGLE_SIDEBAR" }, "*");
@@ -153,19 +203,77 @@ const Container = () => {
 
   return (
     <div className="brDnd-body">
-      <div style={{ backgroundColor: 'var(--brDnd-color-secondary)' }}>
+      <div style={{ backgroundColor: "var(--brDnd-color-secondary)" }}>
         <div
           ref={sidebarRef}
-          className={`brDnd-sidebar ${isPreview ? "brDnd-hidden" : "p-2 hide-scrollbar"}`}
+          className={`brDnd-sidebar brDnd-background-primary brDnd-color-text ${
+            isPreview ? "brDnd-hidden" : "p-2 hide-scrollbar"
+          }`}
           style={{
             width: isPreview ? 0 : `${sidebarWidthRef.current}px`,
           }}
         >
-          <SideBarItem
-            sidebarItems={sidebarItems}
-            shouldAnimateSidebar={shouldAnimateSidebar}
-            isResizingRef={isResizingRef}
-          />
+          <div className="d-flex gap-1 mb-2">
+            <SidebarNavItem
+              icon="bi bi-layers"
+              label="Layers"
+              selected={activeSidebarView === "layers"}
+              onClick={() => setActiveSidebarView("layers")}
+            />
+            <SidebarNavItem
+              icon="bi bi-plus-circle"
+              label="Add Element"
+              selected={activeSidebarView === "add-element"}
+              onClick={() => setActiveSidebarView("add-element")}
+            />
+          </div>
+
+          {/* Sidebar Content */}
+          {activeSidebarView === "add-element" ? (
+            <div style={{ overflow: "auto" }}>
+              <SideBarItem
+                sidebarItems={sidebarItems}
+                shouldAnimateSidebar={shouldAnimateSidebar}
+                isResizingRef={isResizingRef}
+              />
+            </div>
+          ) : (
+            <div className="overflow-auto p-2">
+             <Layers
+                treeExpanded
+                node={config.current}
+                setItem={(updatedNode) => {
+                  const prevTree = deepCopy(config.current);
+                  const newTree = updateNodeById(config.current, updatedNode.id, updatedNode);
+                  config.current = newTree;
+                  trigger((x) => x + 1);
+                  setConfig(newTree);
+                  pushChanges({
+                    doChanges: () => {
+                      config.current = prevTree;
+                      trigger((x) => x + 1);
+                      setConfig(prevTree);
+                    }
+                  });
+                }}
+                handleDeleteItem={(id) => {
+                  const prevTree = deepCopy(config.current);
+                  const newTree = deleteNodeById(config.current, id);
+                  config.current = newTree;
+                  trigger((x) => x + 1);
+                  setConfig(newTree);
+                  pushChanges({
+                    doChanges: () => {
+                      config.current = prevTree;
+                      trigger((x) => x + 1);
+                      setConfig(prevTree);
+                    }
+                  });
+                }}
+              />
+
+            </div>
+          )}
         </div>
       </div>
 
@@ -185,7 +293,10 @@ const Container = () => {
             : `calc(100% - ${sidebarWidthRef.current + 6}px)`,
         }}
       >
-        <div className="brDnd-shortcutBar" id="toolBar">
+        <div
+          className="brDnd-shortcutBar brDnd-background-secondary brDnd-color-text"
+          id="toolBar"
+        >
           <div className={`${isPreview ? "brDnd-hidden" : ""} d-flex`}>
             <span
               onClick={undoChanges}

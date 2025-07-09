@@ -9,7 +9,9 @@ const Mui = () => {
       <Grid />
       <Select />
       <Avatar />
-      {[1, 2, 3].map((item, index) => {})}
+      {[1, 2, 3].map((item, index) => {
+        return <>Hello World</>;
+      })}
     </div>
   );
 };
