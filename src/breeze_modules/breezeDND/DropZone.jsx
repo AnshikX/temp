@@ -27,7 +27,6 @@ const DropZone = ({
   zbase = 0,
   ownerId,
 }) => {
-  console.log(heirarchy)
   const dropZoneRef = useRef();
   const { setHoveredItemId } = useVisibility();
 
@@ -66,7 +65,7 @@ const DropZone = ({
         } else if (item) onDrop(item);
         else console.warn("Something went wrong");
 
-        dropzoneRegistry.forEach((el) => {
+        dropzoneRegistry.forEach(({ el }) => {
           el.classList.remove("visible");
           el.classList.remove("highlighted");
         });
@@ -80,7 +79,7 @@ const DropZone = ({
     isDragging: monitor.isDragging(),
     item: monitor.getItem(),
   }));
-  
+
   // Apply row/col drop class based on parent's layout
   useEffect(() => {
     const el = dropZoneRef.current;
@@ -132,135 +131,122 @@ const DropZone = ({
     const el = dropZoneRef.current;
     if (!el) return;
     el.dataset.ownerId = ownerId || "";
-    dropzoneRegistry.add(el);
+
+    const entry = { el, heirarchy, ownerId };
+    dropzoneRegistry.add(entry);
+
     return () => {
-      dropzoneRegistry.delete(el);
+      dropzoneRegistry.delete(entry);
     };
-  }, [ownerId]);
+  }, [ownerId, heirarchy]);
 
   // Proximity logic to determine which dropzones become visible and which one is highlighted
-  useEffect(() => {
-    if (!isDragging) {
-      dropzoneRegistry.forEach((el) => {
-        el.classList.remove("visible");
-        el.classList.remove("highlighted");
-      });
-      setHoveredItemId(null);
-      return;
+ useEffect(() => {
+  if (!isDragging) {
+    dropzoneRegistry.forEach(({ el }) => {
+      el.classList.remove("visible");
+      el.classList.remove("highlighted");
+    });
+    setHoveredItemId(null);
+    return;
+  }
+
+  let animationFrame = null;
+  let lastVisible = new Set();
+
+  const handleMouseMove = (e) => {
+    if (animationFrame !== null) {
+      cancelAnimationFrame(animationFrame);
     }
 
-    let animationFrame = null;
-    let lastVisible = new Set();
-    let lastRun = 0;
-    const THROTTLE_MS = 500;
+    animationFrame = requestAnimationFrame(() => {
+      const { clientX: cursorX, clientY: cursorY } = e;
 
-    const handleMouseMove = (e) => {
-      const now = performance.now();
-      if (now - lastRun < THROTTLE_MS) return;
-
-      if (animationFrame !== null) {
-        cancelAnimationFrame(animationFrame);
-      }
-
-      animationFrame = requestAnimationFrame(() => {
-        lastRun = now;
-        const { clientX: cursorX, clientY: cursorY } = e;
-
-        // Bail out if the cursor is already over a highlighted dropzone
-        for (const el of dropzoneRegistry) {
-          if (el.classList.contains("highlighted")) {
-            const rect = el.getBoundingClientRect();
-            if (
-              cursorX >= rect.left &&
-              cursorX <= rect.right &&
-              cursorY >= rect.top &&
-              cursorY <= rect.bottom
-            ) {
-              return;
-            }
-          }
-        }
-
-        // Compute distances to each dropzone based on its full bounding box
-        const distances = [];
-        dropzoneRegistry.forEach((el) => {
+      // Skip if already inside highlighted zone
+      for (const { el } of dropzoneRegistry) {
+        if (el.classList.contains("highlighted")) {
           const rect = el.getBoundingClientRect();
-          // Use the minimal distance from the cursor to the dropzone's boundary.
-          const dist = distanceToRect(cursorX, cursorY, rect);
-          distances.push({ el, dist, rect });
-        });
-
-        // Sort by distance (smallest first)
-        distances.sort((a, b) => a.dist - b.dist);
-
-        let threshold = MAX_DISTANCE;
-        const MAX_DISTANCE_LIMIT = 2000; // Max distance to consider
-        let visibleCandidates = [];
-
-        while (threshold <= MAX_DISTANCE_LIMIT) {
-          visibleCandidates = distances.filter(({ dist }) => dist <= threshold);
-          if (visibleCandidates.length >= MAX_VISIBLE) break;
-          threshold += 10; // Gradually expand the search radius
-        }
-
-        const newVisible = new Set(
-          visibleCandidates
-            .sort((a, b) => a.dist - b.dist)
-            .slice(0, MAX_VISIBLE)
-            .map(({ el }) => el)
-        );
-
-        // Find which dropzone (among all) the cursor is actually over:
-        let bestMatch = null;
-        for (const { el, rect } of distances) {
           if (
             cursorX >= rect.left &&
             cursorX <= rect.right &&
             cursorY >= rect.top &&
             cursorY <= rect.bottom
           ) {
-            bestMatch = el;
-            break;
+            return;
           }
         }
-
-        // Apply new visibility and highlighting classes only if changed
-        dropzoneRegistry.forEach((el) => {
-          const shouldBeVisible = newVisible.has(el);
-          const wasVisible = lastVisible.has(el);
-
-          if (shouldBeVisible && !wasVisible) {
-            el.classList.add("visible");
-          } else if (!shouldBeVisible && wasVisible) {
-            el.classList.remove("visible");
-          }
-          el.classList.remove("highlighted");
-        });
-
-        if (bestMatch) {
-          bestMatch.classList.add("highlighted");
-
-          // Get ownerId from data-attribute
-          const matchOwnerId = bestMatch.dataset.ownerId;
-          if (matchOwnerId) {
-            setHoveredItemId(matchOwnerId);
-          }
-        } else {
-          setHoveredItemId(null);
-        }
-
-        lastVisible = newVisible;
-      });
-    };
-
-    window.addEventListener("dragover", handleMouseMove);
-    return () => {
-      window.removeEventListener("dragover", handleMouseMove);
-      if (animationFrame !== null) {
-        cancelAnimationFrame(animationFrame);
       }
-    };
-  }, [isDragging, ownerId, setHoveredItemId]);
+
+      const distances = [];
+      dropzoneRegistry.forEach(({ el, heirarchy }) => {
+        if (item?.item?.id && heirarchy?.includes(item.item.id)) return;
+        const rect = el.getBoundingClientRect();
+        const dist = distanceToRect(cursorX, cursorY, rect);
+        distances.push({ el, dist, rect });
+      });
+
+        // Sort by distance (smallest first)
+      distances.sort((a, b) => a.dist - b.dist);
+
+      let threshold = MAX_DISTANCE;
+        const MAX_DISTANCE_LIMIT = 2000; // Max distance to consider
+      let visibleCandidates = [];
+
+      while (threshold <= MAX_DISTANCE_LIMIT) {
+        visibleCandidates = distances.filter(({ dist }) => dist <= threshold);
+        if (visibleCandidates.length >= MAX_VISIBLE) break;
+        threshold += 10;
+      }
+
+      const newVisible = new Set(
+        visibleCandidates.slice(0, MAX_VISIBLE).map(({ el }) => el)
+      );
+
+      let bestMatch = null;
+      for (const { el, rect } of distances) {
+        if (
+          cursorX >= rect.left &&
+          cursorX <= rect.right &&
+          cursorY >= rect.top &&
+          cursorY <= rect.bottom
+        ) {
+          bestMatch = el;
+          break;
+        }
+      }
+
+      dropzoneRegistry.forEach(({ el }) => {
+        const shouldBeVisible = newVisible.has(el);
+        const wasVisible = lastVisible.has(el);
+
+        if (shouldBeVisible && !wasVisible) {
+          el.classList.add("visible");
+        } else if (!shouldBeVisible && wasVisible) {
+          el.classList.remove("visible");
+        }
+        el.classList.remove("highlighted");
+      });
+
+      if (bestMatch) {
+        bestMatch.classList.add("highlighted");
+        const matchOwnerId = bestMatch.dataset.ownerId;
+        setHoveredItemId(matchOwnerId || null);
+      } else {
+        setHoveredItemId(null);
+      }
+
+      lastVisible = newVisible;
+    });
+  };
+
+  window.addEventListener("dragover", handleMouseMove);
+  return () => {
+    window.removeEventListener("dragover", handleMouseMove);
+    if (animationFrame !== null) {
+      cancelAnimationFrame(animationFrame);
+    }
+  };
+}, [isDragging, ownerId, setHoveredItemId, item]);
 
   const isMatchId = item?.item?.id === ownerId;
 

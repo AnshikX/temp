@@ -186,7 +186,11 @@ const OverlayBar = ({
             (item.elementType !== "TEXT" &&
               item.elementType !== "BREEZE_COMPONENT" &&
               item.elementType !== "THIRD_PARTY" &&
-              item.elementType !== "COMPONENT")
+              item.elementType !== "COMPONENT" && 
+              item.elementType !== "CONDITIONAL" &&
+              item.elementType !== "MAP" &&
+              item.tagName !== "fragment"
+            )
           }
           pos={pos}
           startResize={startResize}
