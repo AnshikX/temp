@@ -74,6 +74,8 @@ const Layers = ({
         <div
           className="brDnd-layers-treeItem"
           style={{
+            backgroundColor: "var(--brDnd-color-secondary)",
+            color: "var(--brDnd-color-text)",
             cursor: "default",
           }}
         >
