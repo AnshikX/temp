@@ -6,6 +6,7 @@ import { useVisibility } from "../contexts/VisibilityContext";
 import "../styles/Layers.css";
 
 const Layers = ({
+  compName,
   node,
   level = 0,
   setItem,
@@ -69,6 +70,17 @@ const Layers = ({
             : "var(--brDnd-color-tertiary)",
       }}
     >
+      {level === 0 && compName && (
+        <div
+          className="brDnd-layers-treeItem"
+          style={{
+            cursor: "default",
+          }}
+        >
+          <span>{compName}</span>
+        </div>
+      )}
+
       <div
         className={`brDnd-layers-treeItem ${
           selectedItemId === node.id ? "selected" : ""
@@ -180,6 +192,7 @@ const Layers = ({
 };
 
 Layers.propTypes = {
+  compName: PropTypes.string,
   node: PropTypes.object.isRequired,
   level: PropTypes.number,
   setItem: PropTypes.func,

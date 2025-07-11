@@ -20,10 +20,11 @@ const Container = () => {
     widgets: [],
   });
   const [activeSidebarView, setActiveSidebarView] = useState("layers");
-  const { pushChanges } = usePushChanges();
-
-  const { setSelectedItemId } = useSetters();
   const [isPreview, setIsPreview] = useState(false);
+  const [compName, setCompName] = useState(null);
+
+  const { pushChanges } = usePushChanges();
+  const { setSelectedItemId } = useSetters();
   const { setFullMetaConfig } = useMetaConfig();
   const { undoChanges, redoChanges, undoStack, redoStack } = useUndoRedo();
   const trigger = useState(0)[1];
@@ -43,6 +44,7 @@ const Container = () => {
           if (resource.type === "componentConfig") {
             config.current = resource.component;
             setFullMetaConfig(resource.fullMetaConfig);
+            setCompName(resource.compName);
             trigger((x) => x + 1);
           }
           if (resource.type === "sidebarItems") {
@@ -127,7 +129,7 @@ const Container = () => {
     return {
       ...tree,
       ...(updatedChildren ? { children: updatedChildren } : {}),
-      ...(tree.elementType === 'CONDITIONAL'
+      ...(tree.elementType === "CONDITIONAL"
         ? {
             trueCase: updateNodeById(tree.trueCase, nodeId, updates),
             falseCase: updateNodeById(tree.falseCase, nodeId, updates),
@@ -207,13 +209,16 @@ const Container = () => {
         <div
           ref={sidebarRef}
           className={`brDnd-sidebar brDnd-background-primary brDnd-color-text ${
-            isPreview ? "brDnd-hidden" : "p-2 hide-scrollbar"
+            isPreview ? "brDnd-hidden" : "hide-scrollbar"
           }`}
           style={{
             width: isPreview ? 0 : `${sidebarWidthRef.current}px`,
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
           }}
         >
-          <div className="d-flex gap-1 mb-2">
+          <div className="d-flex p-2">
             <SidebarNavItem
               icon="bi bi-layers"
               label="Layers"
@@ -228,52 +233,55 @@ const Container = () => {
             />
           </div>
 
-          {/* Sidebar Content */}
-          {activeSidebarView === "add-element" ? (
-            <div style={{ overflow: "auto" }}>
+          <div className="overflow-auto">
+            {activeSidebarView === "add-element" ? (
               <SideBarItem
                 sidebarItems={sidebarItems}
                 shouldAnimateSidebar={shouldAnimateSidebar}
                 isResizingRef={isResizingRef}
               />
-            </div>
-          ) : (
-            <div className="overflow-auto p-2">
-             <Layers
-                treeExpanded
-                node={config.current}
-                setItem={(updatedNode) => {
-                  const prevTree = deepCopy(config.current);
-                  const newTree = updateNodeById(config.current, updatedNode.id, updatedNode);
-                  config.current = newTree;
-                  trigger((x) => x + 1);
-                  setConfig(newTree);
-                  pushChanges({
-                    doChanges: () => {
-                      config.current = prevTree;
-                      trigger((x) => x + 1);
-                      setConfig(prevTree);
-                    }
-                  });
-                }}
-                handleDeleteItem={(id) => {
-                  const prevTree = deepCopy(config.current);
-                  const newTree = deleteNodeById(config.current, id);
-                  config.current = newTree;
-                  trigger((x) => x + 1);
-                  setConfig(newTree);
-                  pushChanges({
-                    doChanges: () => {
-                      config.current = prevTree;
-                      trigger((x) => x + 1);
-                      setConfig(prevTree);
-                    }
-                  });
-                }}
-              />
-
-            </div>
-          )}
+            ) : (
+              <div className="p-2">
+                <Layers
+                  compName={compName}
+                  treeExpanded
+                  node={config.current}
+                  setItem={(updatedNode) => {
+                    const prevTree = deepCopy(config.current);
+                    const newTree = updateNodeById(
+                      config.current,
+                      updatedNode.id,
+                      updatedNode
+                    );
+                    config.current = newTree;
+                    trigger((x) => x + 1);
+                    setConfig(newTree);
+                    pushChanges({
+                      doChanges: () => {
+                        config.current = prevTree;
+                        trigger((x) => x + 1);
+                        setConfig(prevTree);
+                      },
+                    });
+                  }}
+                  handleDeleteItem={(id) => {
+                    const prevTree = deepCopy(config.current);
+                    const newTree = deleteNodeById(config.current, id);
+                    config.current = newTree;
+                    trigger((x) => x + 1);
+                    setConfig(newTree);
+                    pushChanges({
+                      doChanges: () => {
+                        config.current = prevTree;
+                        trigger((x) => x + 1);
+                        setConfig(prevTree);
+                      },
+                    });
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
