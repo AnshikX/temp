@@ -32,6 +32,12 @@ const Del = ({ editMode }) => {
   useEffect(() => {
     getValue();
   }, []);
-  return <div />;
+  return (
+    <div>
+      {undefined.map((item) => {
+        return <></>;
+      })}
+    </div>
+  );
 };
 export default Del;
