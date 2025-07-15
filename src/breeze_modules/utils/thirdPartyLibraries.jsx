@@ -14,6 +14,8 @@ import * as react_bootstrap from "react-bootstrap";
 import * as mui_material from "@mui/material";
 import * as emotion_styled from "@emotion/styled";
 import * as react_chartjs_2 from "react-chartjs-2";
+import * as antd from "antd";
+import * as chakra_ui_react from "@chakra-ui/react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 
@@ -33,5 +35,7 @@ export const libraries = {
     "react-bootstrap": react_bootstrap,
     "@mui/material": mui_material,
     "@emotion/styled": emotion_styled,
-    "react-chartjs-2": react_chartjs_2
+    "react-chartjs-2": react_chartjs_2,
+    "antd": antd,
+    "@chakra-ui/react": chakra_ui_react
 };

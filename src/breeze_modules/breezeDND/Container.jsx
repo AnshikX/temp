@@ -47,6 +47,18 @@ const Container = () => {
             setCompName(resource.compName);
             trigger((x) => x + 1);
           }
+          // if (resource.type === "updateItem") {
+          //   const updatedTree = updateNodeById(
+          //     config.current,
+          //     resource.itemConfig.id,
+          //     resource.itemConfig
+          //   );
+
+          //   config.current = updatedTree;
+          //   trigger((x) => x + 1);
+          //   setConfig(updatedTree);
+          // }
+
           if (resource.type === "sidebarItems") {
             setSidebarItems(resource.sidebarItems);
           }

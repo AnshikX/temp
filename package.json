@@ -27,7 +27,9 @@
     "bootstrap-icons": "*",
     "@mui/material": "*",
     "@emotion/styled": "*",
-    "react-chartjs-2": "*"
+    "react-chartjs-2": "*",
+    "antd": "*",
+    "@chakra-ui/react": "*",
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

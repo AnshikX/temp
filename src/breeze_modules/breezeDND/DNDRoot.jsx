@@ -6,10 +6,11 @@ import { VisibilityProvider } from "./contexts/VisibilityContext.jsx";
 // import { MapProvider } from "./contexts/MapContext.jsx";
 import { UndoRedoProvider } from "./contexts/UndoRedoContext.jsx";
 import { MetaConfigProvider } from "./contexts/MetaConfigContext.jsx";
+import CommonProvider from "../CommonProvider.jsx";
 
 export default function DNDRoot() {
   return (
-    <>
+    <CommonProvider>
       <UndoRedoProvider>
         {/* <MapProvider> */}
           <MetaConfigProvider>
@@ -23,6 +24,6 @@ export default function DNDRoot() {
           </MetaConfigProvider>
         {/* </MapProvider> */}
       </UndoRedoProvider>
-    </>
+    </CommonProvider>
   );
 }

@@ -136,6 +136,11 @@ const entityDetails = {
     "from": "/src/services/Breeze API/project.jsx",
     "default": false
   },
+  "1d2c8a39_a954_4c79_9033_76a2a45b9834": {
+    "exportedAs": "Map",
+    "from": "/src/components/Map.jsx",
+    "default": true
+  },
   "1eb7852f_bf40_429c_b4b5_78915bbbb99c": {
     "exportedAs": "projectUpdateEnvSettingsUpdate",
     "from": "/src/services/Breeze API_1/environment.jsx",
@@ -235,6 +240,11 @@ const entityDetails = {
     "exportedAs": "getUser",
     "from": "/src/services/Breeze API/Auth.jsx",
     "default": false
+  },
+  "325f14cb_7a10_4082_9fe1_3d38e51c7e40": {
+    "exportedAs": "Tryd",
+    "from": "/src/components/try..jsx",
+    "default": true
   },
   "334442d7_626d_42e7_886b_eb37d009d488": {
     "exportedAs": "directoryRenameFileUpdate",
