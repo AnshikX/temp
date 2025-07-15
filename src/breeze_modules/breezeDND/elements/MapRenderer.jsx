@@ -35,6 +35,7 @@ const MapRendererX = ({
 }) => {
   const [configs, setConfigs] = useState([]);
   const [currentItem, setCurrentItem] = useState(item);
+  
   const { setItemDetails } = useSetters();
   const selectedItemId = useSelectedItemId();
   const { pushChanges } = usePushChanges();
@@ -63,6 +64,31 @@ const MapRendererX = ({
     },
     [updateItem, pushChanges]
   );
+
+  useEffect(() => {
+    if (selectedItemId !== currentItem.id) return;
+
+    const handleMessageEvent = (event) => {
+      if (event.data?.source === "BREEZE" && event.data.type === "resource") {
+        const { resource } = event.data;
+        if (resource.type === "updateItem") {
+          updateCurrentItem((item) => {
+            console.log(item)
+            console.log(resource.itemConfig)
+            resource.itemConfig.children = item?.children;
+            if (JSON.stringify(resource.itemConfig) !== JSON.stringify(item)) {
+              return resource.itemConfig;
+            } else {
+              return item;
+            }
+          });
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessageEvent);
+    return () => window.removeEventListener("message", handleMessageEvent);
+  }, [currentItem.id, selectedItemId, updateCurrentItem]);
 
   useEffect(() => {
     setCurrentItem(item);
@@ -156,6 +182,7 @@ MapRendererX.propTypes = {
     bodyConfig: PropTypes.shape({
       statements: PropTypes.array,
     }),
+    children: PropTypes.array,
   }).isRequired,
   handleSelect: PropTypes.func.isRequired,
   drag: PropTypes.func.isRequired,

@@ -45,7 +45,7 @@ const Del = ({ editMode }) => {
   }, []);
   return (
     <div>
-      {arr.map((item, index) => {
+      {Object.keys(FormData).map((item, index) => {
         return <></>;
       })}
       <Tooltip title={"ToolYiop"}>
