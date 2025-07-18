@@ -1,7 +1,7 @@
 import { React } from "react";
-const Map = () => {
+const Map = ({ children }) => {
   const arr = ["A", "B"];
   const obj = { name: "Random" };
-  return <div />;
+  return <div>{children}</div>;
 };
 export default Map;
