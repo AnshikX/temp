@@ -5,6 +5,7 @@ import downArrow from "../assets/svgs/down-arrow.svg";
 import { DraggableItem } from "./DraggableItem";
 import { SidebarSection } from "./SidebarSection";
 import "../styles/Sidebar.css";
+import { asClient } from "../postMessageBridge";
 
 const filterItems = (items, searchQuery) => {
   return items.filter((item) =>
@@ -82,39 +83,35 @@ const SideBarItem = ({ sidebarItems }) => {
     toggleButtonRef.current?.click();
   };
 
-  const toggleLibrary = (libNameWithVersion) => {
+  const toggleLibrary = async (libNameWithVersion) => {
     setExpandedLibs((prev) => ({
       ...prev,
       [libNameWithVersion]: !prev[libNameWithVersion],
     }));
-    if (!libComponents[libNameWithVersion]) {
-      window.parent.postMessage(
-        {
-          source: "APP",
-          action: "FETCH_THIRD_PARTY_COMPONENTS",
-          payload: { libName: libNameWithVersion },
-        },
-        "*"
-      );
-    }
-  };
 
-  useEffect(() => {
-    const handleMessage = (event) => {
-      if (event.data?.source === "BREEZE") {
-        const { resource } = event.data;
-        if (resource?.type === "third_party") {
+    if (!libComponents[libNameWithVersion]) {
+      try {
+        const result = await asClient.sendRequest(
+          "FETCH_THIRD_PARTY_COMPONENTS",
+          {
+            libName: libNameWithVersion,
+          }
+        );
+
+        if (result?.third_party) {
           const grouped = {};
-          resource.third_party.forEach(({ libName, mostUsed = [], allComponents = [] }) => {
-            grouped[libName] = { mostUsed, allComponents };
-          });
+          result.third_party.forEach(
+            ({ libName, mostUsed = [], allComponents = [] }) => {
+              grouped[libName] = { mostUsed, allComponents };
+            }
+          );
           setLibComponents((prev) => ({ ...prev, ...grouped }));
         }
+      } catch (err) {
+        console.error("Failed to fetch third-party lib components:", err);
       }
-    };
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [libComponents]);
+    }
+  };
 
   useEffect(() => {
     const shouldOpen = {};
@@ -142,13 +139,31 @@ const SideBarItem = ({ sidebarItems }) => {
       </div>
 
       <div className="accordion" id="sidebarAccordion">
-        <SidebarSection title="HTML Elements" open={openSections.html} items={filteredHtmlItems} />
-        <SidebarSection title="Components" open={openSections.components} items={filteredComponents} />
+        <SidebarSection
+          title="HTML Elements"
+          open={openSections.html}
+          items={filteredHtmlItems}
+        />
+        <SidebarSection
+          title="Components"
+          open={openSections.components}
+          items={filteredComponents}
+        />
 
-        <div className="mb-2 accordion-item brDnd-background-primary brDnd-color-text" style={{ border: "none" }}>
-          <div className="rounded accordion-header" id="heading-third-party" onClick={handleTileClick} style={{ cursor: "pointer" }}>
+        <div
+          className="mb-2 accordion-item brDnd-background-primary brDnd-color-text"
+          style={{ border: "none" }}
+        >
+          <div
+            className="rounded accordion-header"
+            id="heading-third-party"
+            onClick={handleTileClick}
+            style={{ cursor: "pointer" }}
+          >
             <div className="d-flex justify-content-between align-items-center p-2">
-              <span className="fw-medium" style={{ fontSize: "14px" }}>Third Party</span>
+              <span className="fw-medium" style={{ fontSize: "14px" }}>
+                Third Party
+              </span>
               <div className="d-flex align-items-center">
                 <button
                   ref={toggleButtonRef}
@@ -164,14 +179,28 @@ const SideBarItem = ({ sidebarItems }) => {
             </div>
           </div>
 
-          <div id="collapse-third-party" className={`accordion-collapse collapse ${openSections.third_party ? "show" : ""}`} aria-labelledby="heading-third-party">
+          <div
+            id="collapse-third-party"
+            className={`accordion-collapse collapse ${
+              openSections.third_party ? "show" : ""
+            }`}
+            aria-labelledby="heading-third-party"
+          >
             <div className="accordion-body p-1">
               {filteredLibs.length > 0 ? (
                 filteredLibs.map((libName) => (
                   <div key={libName}>
-                    <div className="cursor-pointer font-semibold py-1 d-flex justify-content-between" onClick={() => toggleLibrary(libName)}>
+                    <div
+                      className="font-semibold py-1 d-flex justify-content-between"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => toggleLibrary(libName)}
+                    >
                       <span>{formatLibName(libName)}</span>
-                      <img src={expandedLibs[libName] ? upArrow : downArrow} className="inline ml-2" alt="toggle" />
+                      <img
+                        src={expandedLibs[libName] ? upArrow : downArrow}
+                        className="inline ml-2"
+                        alt="toggle"
+                      />
                     </div>
                     {expandedLibs[libName] && (
                       <div className="ml-4">
@@ -181,36 +210,60 @@ const SideBarItem = ({ sidebarItems }) => {
                               <>
                                 <div className="font-semibold text-sm d-flex justify-content-between">
                                   <span>Most Used</span>
-                                  <span className="pill">{libComponents[libName].mostUsed.length}</span>
+                                  <span className="pill">
+                                    {libComponents[libName].mostUsed.length}
+                                  </span>
                                 </div>
                                 <div className="brDnd-cardGrid">
                                   {libComponents[libName].mostUsed
-                                    .filter((item) => item.label?.toLowerCase().includes(searchQuery.toLowerCase()))
+                                    .filter((item) =>
+                                      item.label
+                                        ?.toLowerCase()
+                                        .includes(searchQuery.toLowerCase())
+                                    )
                                     .map((item, idx) => (
-                                      <DraggableItem key={`most-${idx}`} data={{ ...item }} />
+                                      <DraggableItem
+                                        key={`most-${idx}`}
+                                        data={{ ...item }}
+                                      />
                                     ))}
                                 </div>
                               </>
                             )}
 
-                            {libComponents[libName].allComponents?.length > 0 && (
+                            {libComponents[libName].allComponents?.length >
+                              0 && (
                               <>
                                 <div className="font-semibold text-sm mt-3 d-flex justify-content-between">
                                   <span>All Components</span>
-                                  <span className="pill">{libComponents[libName].allComponents.length}</span>
+                                  <span className="pill">
+                                    {
+                                      libComponents[libName].allComponents
+                                        .length
+                                    }
+                                  </span>
                                 </div>
                                 <div className="brDnd-cardGrid">
                                   {libComponents[libName].allComponents
-                                    .filter((item) => item.label?.toLowerCase().includes(searchQuery.toLowerCase()))
+                                    .filter((item) =>
+                                      item.label
+                                        ?.toLowerCase()
+                                        .includes(searchQuery.toLowerCase())
+                                    )
                                     .map((item, idx) => (
-                                      <DraggableItem key={`all-${idx}`} data={{ ...item }} />
+                                      <DraggableItem
+                                        key={`all-${idx}`}
+                                        data={{ ...item }}
+                                      />
                                     ))}
                                 </div>
                               </>
                             )}
                           </>
                         ) : (
-                          <div className="text-sm italic text-gray-500">Loading...</div>
+                          <div className="text-sm italic text-gray-500">
+                            Loading...
+                          </div>
                         )}
                       </div>
                     )}
@@ -223,7 +276,11 @@ const SideBarItem = ({ sidebarItems }) => {
           </div>
         </div>
 
-        <SidebarSection title="Widget Elements" open={openSections.widgets} items={filteredWidgets} />
+        <SidebarSection
+          title="Widget Elements"
+          open={openSections.widgets}
+          items={filteredWidgets}
+        />
       </div>
     </div>
   );

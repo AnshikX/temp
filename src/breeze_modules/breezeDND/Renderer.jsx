@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { useDrag } from "react-dnd";
 import DropZone from "./DropZone";
 import PropTypes from "prop-types";
 import { useSelectedItemId, useSetters } from "./contexts/SelectionContext";
@@ -9,7 +8,20 @@ import CombinedRenderer from "./elements/CombinedRenderer";
 import { useVisibility } from "./contexts/VisibilityContext";
 import MapRenderer from "./elements/MapRenderer";
 import ConditionalRenderer from "./elements/ConditionalRenderer";
+import { useCustomDrag } from "./dragndropUtils/useCustomDrag";
+import deepCopy from "../utils/deepcopy";
+import { v4 as uuidv4 } from "uuid";
+import { asFrameClient } from "./postMessageBridge";
 
+function assignNewIdsRecursively(item) {
+  const newItem = { ...item, id: uuidv4() };
+
+  if (Array.isArray(newItem.children)) {
+    newItem.children = newItem.children.map(assignNewIdsRecursively);
+  }
+
+  return newItem;
+}
 const Renderer = ({
   item,
   addSibling,
@@ -31,17 +43,15 @@ const Renderer = ({
   const [isHovered, setIsHovered] = useState(false);
   const firstDropZoneHeriarchy = [...heirarchy];
   const isSelected = selectedItemId === item.id;
-  const [{ isDragging }, drag] = useDrag(
+
+  const [{ isDragging }, drag] = useCustomDrag(
     {
       type: "HTML",
       item: { item: { ...item }, myOnDrop: handleDelete },
       canDrag: () => (handleDelete ? true : false),
-
-      collect: (monitor) => ({
-        isDragging: monitor.isDragging(),
-      }),
-    },
-    [item, handleDelete]
+      mode: "same-frame",
+    }
+    // [item, handleDelete]
   );
 
   const opacity = isDragging ? 0.5 : 1;
@@ -98,18 +108,28 @@ const Renderer = ({
     [isSelected]
   );
 
+  const handleDuplicate = useCallback(() => {
+    if (!addSibling) return;
+
+    const copied = deepCopy(item);
+    const newItem = assignNewIdsRecursively(copied);
+    newItem.label = `${item.label || item.tagName || item.elementType} (Copy)`;
+
+    addSibling(newItem, 1);
+    // setSelectedItemId(newItem.id);
+  }, [addSibling, item]);
+
   useEffect(() => {
-    const handleMessage = (event) => {
-      if (event.data?.source === "LayersEditor") {
-        const { action, nodeId } = event.data;
-        if (action === "deleteItem" && nodeId === item.id) {
-          handleDelete();
-        }
+    const func = (data) => {
+      if (data.itemId === item.id) {
+        handleDelete();
       }
     };
 
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
+    asFrameClient.on("DELETE_ITEM", func);
+    return () => {
+      asFrameClient.off("DELETE_ITEM", func);
+    };
   }, [item.id, handleDelete]);
 
   if (!isVisible) {
@@ -204,6 +224,7 @@ const Renderer = ({
           setIsHovered={setIsHovered}
           isFirst={isFirst}
           overDetails={overDetails}
+          onDuplicate={handleDuplicate}
         />
       )}
     </>

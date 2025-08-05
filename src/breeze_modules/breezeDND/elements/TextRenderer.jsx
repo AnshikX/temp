@@ -5,6 +5,8 @@ import { usePushChanges } from "../contexts/UndoRedoContext";
 import deepCopy from "../../utils/deepcopy";
 import { ErrorBoundary } from "react-error-boundary";
 import { FallbackWithReload } from "../utils/FallbackWithReload";
+import { asFrameClient } from "../postMessageBridge";
+// import { asClient } from "../../breezeDND/class";
 
 const TextRenderer = ({
   item,
@@ -52,18 +54,29 @@ const TextRenderer = ({
   useEffect(() => {
     if (selectedItemId !== currentItem.id) return;
 
-    const handleMessageEvent = (event) => {
-      if (event.data?.source === "BREEZE" && event.data.type === "resource") {
-        const { resource } = event.data;
-        if (resource.type === "updateItem") {
-          updateCurrentItem(resource.itemConfig);
-        }
-      }
+    const handleItemChange = (itemConfig) => {
+      updateCurrentItem(itemConfig);
     };
 
-    window.addEventListener("message", handleMessageEvent);
-    return () => window.removeEventListener("message", handleMessageEvent);
+    asFrameClient.on("updateItemConfig", handleItemChange);
+    return () => {
+      asFrameClient.off("updateItemConfig", handleItemChange);
+    };
   }, [selectedItemId, currentItem.id, updateCurrentItem]);
+
+  useEffect(() => {
+    const updateLabel = (data) => {
+      updateCurrentItem((prev) => ({
+        ...prev,
+        label: data.label,
+      }));
+    };
+
+    asFrameClient.on(`UPDATE_LABEL+${currentItem.id}`, updateLabel);
+    return () => {
+      asFrameClient.off(`UPDATE_LABEL+${currentItem.id}`, updateLabel);
+    };
+  }, [currentItem.id, updateCurrentItem]);
 
   useEffect(() => {
     if (selectedItemId === currentItem.id) {
@@ -80,8 +93,10 @@ const TextRenderer = ({
 
   const boundaryProps = {
     FallbackComponent: (props) => (
-      <FallbackWithReload {...props} resetErrorBoundary={forceRerender}>
-      </FallbackWithReload>
+      <FallbackWithReload
+        {...props}
+        resetErrorBoundary={forceRerender}
+      ></FallbackWithReload>
     ),
     resetKeys: [errorResetKey],
   };
@@ -112,11 +127,16 @@ const TextRenderer = ({
     }
   };
 
-  if(currentItem.textType === "value"){
+  if (currentItem.textType === "value") {
     return (
       <span
         id={currentItem.id}
-        style={{ opacity, display: "inline", width: "auto", zIndex: zbase + 22 }}
+        style={{
+          opacity,
+          display: "inline",
+          width: "auto",
+          zIndex: zbase + 22,
+        }}
         onClick={handleSelect}
         onDoubleClick={handleDoubleClick}
         onMouseOver={handleMouseOver}
@@ -125,7 +145,7 @@ const TextRenderer = ({
       >
         ${currentItem.value.label || "variable"}
       </span>
-    )
+    );
   }
   return (
     <ErrorBoundary {...boundaryProps}>
@@ -134,9 +154,9 @@ const TextRenderer = ({
       ) : isEditing ? (
         <input
           id={currentItem.id}
-          style={{ display: "inline", width: "auto" ,zIndex: zbase + 22 }}
+          style={{ display: "inline", width: "auto", zIndex: zbase + 22 }}
           type="text"
-          defaultValue={currentItem.value}
+          value={currentItem.value}
           onMouseOver={handleMouseOver}
           onMouseOut={handleMouseOut}
           autoFocus
@@ -146,7 +166,13 @@ const TextRenderer = ({
       ) : (
         <span
           id={currentItem.id}
-          style={{ opacity, display: "inline", position:"relative", width: "auto",zIndex: zbase + 22 }}
+          style={{
+            opacity,
+            display: "inline",
+            position: "relative",
+            width: "auto",
+            zIndex: zbase + 22,
+          }}
           onClick={handleSelect}
           onDoubleClick={handleDoubleClick}
           onMouseOver={handleMouseOver}
@@ -174,7 +200,7 @@ TextRenderer.propTypes = {
   opacity: PropTypes.number.isRequired,
   drag: PropTypes.func.isRequired,
   isPreview: PropTypes.bool.isRequired,
-  zbase: PropTypes.number.isRequired
+  zbase: PropTypes.number.isRequired,
 };
 
 export default TextRenderer;

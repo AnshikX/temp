@@ -11,7 +11,7 @@ import { useSelectedItemId, useSetters } from "../contexts/SelectionContext";
 import deepCopy from "../../utils/deepcopy";
 import { usePushChanges } from "../contexts/UndoRedoContext";
 import { useMetaConfig } from "../contexts/MetaConfigContext";
-
+import {  asFrameClient } from "../postMessageBridge";
 const extractConfig = (filteredParts, item) => {
   let target = item;
   for (const part of filteredParts) {
@@ -35,7 +35,7 @@ const MapRendererX = ({
 }) => {
   const [configs, setConfigs] = useState([]);
   const [currentItem, setCurrentItem] = useState(item);
-  
+
   const { setItemDetails } = useSetters();
   const selectedItemId = useSelectedItemId();
   const { pushChanges } = usePushChanges();
@@ -68,27 +68,59 @@ const MapRendererX = ({
   useEffect(() => {
     if (selectedItemId !== currentItem.id) return;
 
-    const handleMessageEvent = (event) => {
-      if (event.data?.source === "BREEZE" && event.data.type === "resource") {
-        const { resource } = event.data;
-        if (resource.type === "updateItem") {
-          updateCurrentItem((item) => {
-            console.log(item)
-            console.log(resource.itemConfig)
-            resource.itemConfig.children = item?.children;
-            if (JSON.stringify(resource.itemConfig) !== JSON.stringify(item)) {
-              return resource.itemConfig;
-            } else {
-              return item;
-            }
-          });
+    const handleItemChange = (itemConfig) => {
+      updateCurrentItem((item) => {
+        itemConfig.children = item?.children;
+        if (JSON.stringify(itemConfig) !== JSON.stringify(item)) {
+          return itemConfig;
+        } else {
+          return item;
         }
-      }
+      });
     };
 
-    window.addEventListener("message", handleMessageEvent);
-    return () => window.removeEventListener("message", handleMessageEvent);
+    asFrameClient.on("updateItemConfig", handleItemChange);
+    return () => {
+      asFrameClient.off("updateItemConfig", handleItemChange);
+    };
   }, [currentItem.id, selectedItemId, updateCurrentItem]);
+
+  useEffect(() => {
+    const handler = (data) => {
+      updateCurrentItem((prev) => ({
+        ...prev,
+        label: data.label,
+      }));
+    };
+
+    asFrameClient.on(`UPDATE_LABEL+${currentItem.id}`, handler);
+    return () => asFrameClient.off(`UPDATE_LABEL+${currentItem.id}`, handler);
+  }, [currentItem.id, updateCurrentItem]);
+
+  // useEffect(() => {
+  //   if (selectedItemId !== currentItem.id) return;
+
+  //   const handleMessageEvent = (event) => {
+  //     if (event.data?.source === "BREEZE" && event.data.type === "resource") {
+  //       const { resource } = event.data;
+  //       if (resource.type === "updateItem") {
+  //         updateCurrentItem((item) => {
+  //           console.log(item);
+  //           console.log(resource.itemConfig);
+  //           resource.itemConfig.children = item?.children;
+  //           if (JSON.stringify(resource.itemConfig) !== JSON.stringify(item)) {
+  //             return resource.itemConfig;
+  //           } else {
+  //             return item;
+  //           }
+  //         });
+  //       }
+  //     }
+  //   };
+
+  //   window.addEventListener("message", handleMessageEvent);
+  //   return () => window.removeEventListener("message", handleMessageEvent);
+  // }, [currentItem.id, selectedItemId, updateCurrentItem]);
 
   useEffect(() => {
     setCurrentItem(item);
@@ -113,7 +145,7 @@ const MapRendererX = ({
         const path = stmt.index.startsWith(meta.index)
           ? returnParts.slice(metaParts.length)
           : returnParts;
-        return extractConfig(path, currentItem); // ← pointer with `.value`
+        return extractConfig(path, currentItem);
       });
 
       ref.current = filteredPointers;

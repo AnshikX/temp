@@ -1,27 +1,25 @@
 import { useCallback } from "react";
 import { generateIdFromTemplate } from "../utils/generateIds";
-import { useDrag } from "react-dnd";
 import PropTypes from "prop-types";
 import truncateWithEllipsis from "../../utils/truncateText";
+import { useCustomDrag } from "../dragndropUtils/useCustomDrag";
 
 export const DraggableItem = ({ data }) => {
-  const getItem = useCallback(() => generateIdFromTemplate(data), [data]);
+  const getItem = useCallback(() => {
+    const config = generateIdFromTemplate(data);
+    return { item: config };
+  }, [data]);
 
-  const [{ opacity }, drag] = useDrag(
-    () => ({
-      type: "HTML",
-      item: { getItem },
-      collect: (monitor) => ({
-        opacity: monitor.isDragging() ? 0.4 : 1,
-      }),
-    }),
-    [data]
-  );
-
+  const [{ isDragging }, drag] = useCustomDrag({
+    item: getItem(),
+    canDrag: () => true,
+    mode: "cross-frame",
+  });
+  
   const iconClass = data.icon || "bi-table";
 
   return (
-    <div className="brDnd-cardItem" ref={drag} style={{ opacity }}>
+    <div className="brDnd-cardItem" ref={drag} style={{ opacity: isDragging ? 0.4 : 1 }}>
       <div className="brDnd-cardImageWrapper">
         <i className={`bi ${iconClass} fs-4 brDnd-cardIcon`} />
       </div>

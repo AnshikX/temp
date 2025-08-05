@@ -4,15 +4,15 @@ import MapsLayers from "./MapLayers";
 import { useSetters, useSelectedItemId } from "../contexts/SelectionContext";
 import { useVisibility } from "../contexts/VisibilityContext";
 import "../styles/Layers.css";
+import { asFrameHost } from "../postMessageBridge";
 
 const Layers = ({
   compName,
   node,
   level = 0,
-  setItem,
+  // setItem,
   selectedTab,
   treeExpanded = true,
-  handleDeleteItem,
 }) => {
   const [expanded, setExpanded] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -25,7 +25,6 @@ const Layers = ({
   const handleVisibilityToggle = (e) => {
     e.stopPropagation();
     toggleVisibility(node.id);
-    handleSelectItem(node);
   };
 
   const handleSelectItem = () => {
@@ -42,7 +41,12 @@ const Layers = ({
 
   const handleInputChange = (e) => {
     const newValue = e.target.value;
-    setItem({ ...node, label: newValue });
+    // setItem({ ...node, label: newValue });
+
+    asFrameHost.sendEvent(`UPDATE_LABEL+${node.id}`, {
+      itemId: node.id,
+      label: newValue,
+    });
   };
 
   const handleDoubleClick = (e) => {
@@ -53,7 +57,11 @@ const Layers = ({
 
   const handleDelete = (e) => {
     e.stopPropagation();
-    handleDeleteItem(node.id);
+    // handleDeleteItem(node.id);
+
+    asFrameHost.sendEvent(`DELETE_ITEM`, {
+      itemId: node.id,
+    });
   };
 
   return (
@@ -97,7 +105,7 @@ const Layers = ({
             className={`bi bi-eye${isVisible ? "" : "-slash"} mt-1`}
             style={{ cursor: "pointer", flexShrink: 0 }}
             onClick={handleVisibilityToggle}
-          ></i>
+          />
 
           {isEditing && node.id === selectedItemId ? (
             <input
@@ -140,9 +148,8 @@ const Layers = ({
             node={node}
             handleSelect={handleSelectItem}
             selectedTab={selectedTab}
-            handleDeleteItem={handleDeleteItem}
             level={level + 1}
-            setItem={setItem}
+            // setItem={setItem}
           />
         </div>
       )}
@@ -155,9 +162,8 @@ const Layers = ({
                 label: "Conditional (True Case)",
               }}
               level={level}
-              setItem={setItem}
+              // setItem={setItem}
               selectedTab={selectedTab}
-              handleDeleteItem={handleDeleteItem}
             />
           )}
 
@@ -168,9 +174,8 @@ const Layers = ({
                 label: "Conditional (False Case)",
               }}
               level={level}
-              setItem={setItem}
+              // setItem={setItem}
               selectedTab={selectedTab}
-              handleDeleteItem={handleDeleteItem}
             />
           )}
         </div>
@@ -182,9 +187,8 @@ const Layers = ({
               key={child.id}
               node={child}
               level={level + 1}
-              setItem={setItem}
+              // setItem={setItem}
               selectedTab={selectedTab}
-              handleDeleteItem={handleDeleteItem}
             />
           ))}
         </div>
@@ -200,7 +204,6 @@ Layers.propTypes = {
   setItem: PropTypes.func,
   selectedTab: PropTypes.object,
   treeExpanded: PropTypes.bool,
-  handleDeleteItem: PropTypes.func.isRequired,
 };
 
 export default Layers;

@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import SideBarItem from "./sidebars/SideBarItem";
-import Renderer from "./Renderer";
+// import Renderer from "./Renderer";
 import "./styles/Container.css";
 import { useSetters } from "./contexts/SelectionContext";
-import { usePushChanges, useUndoRedo } from "./contexts/UndoRedoContext";
+// import { useUndoRedo } from "./contexts/UndoRedoContext";
 import undoButton from "./assets/svgs/undo-button.svg";
 import redoButton from "./assets/svgs/redo-button.svg";
 import Layers from "./sidebars/Layers";
 import SidebarNavItem from "./sidebars/SidebarNavItem";
-import deepCopy from "../utils/deepcopy";
 import { useMetaConfig } from "./contexts/MetaConfigContext";
+import { asClient, asFrameHost } from "./postMessageBridge";
 
 const Container = () => {
   const config = useRef({});
@@ -23,77 +23,87 @@ const Container = () => {
   const [isPreview, setIsPreview] = useState(false);
   const [compName, setCompName] = useState(null);
 
-  const { pushChanges } = usePushChanges();
+  // const { pushChanges } = usePushChanges();
   const { setSelectedItemId } = useSetters();
   const { setFullMetaConfig } = useMetaConfig();
-  const { undoChanges, redoChanges, undoStack, redoStack } = useUndoRedo();
+  // const { undoChanges, redoChanges, undoStack, redoStack } = useUndoRedo();
   const trigger = useState(0)[1];
 
   const isResizingRef = useRef(false);
   const sidebarRef = useRef(null);
   const pageContainerRef = useRef(null);
   const sidebarWidthRef = useRef(250);
+  const iframe2Ref = useRef(null);
 
+  // Initialize asClient and handle incoming messages
   useEffect(() => {
-    const handleMessage = (event) => {
-      // eslint-disable-next-line no-constant-condition
-      if (event.origin === "http://localhost:3000" || true) {
-        const { type } = event.data;
-        if (type === "resource") {
-          const resource = event.data.resource;
-          if (resource.type === "componentConfig") {
-            config.current = resource.component;
-            setFullMetaConfig(resource.fullMetaConfig);
-            setCompName(resource.compName);
-            trigger((x) => x + 1);
-          }
-          if (resource.type === "sidebarItems") {
-            setSidebarItems(resource.sidebarItems);
-          }
-          if (
-            event.data?.source === "Navbar" &&
-            event.data?.resource?.type === "colorTheme"
-          ) {
-            const colorVars = event.data.resource.colors;
+    const loadInitialData = async () => {
+      try {
+        const [component, sidebar, theme] = await Promise.all([
+          asClient.sendRequest("componentConfig"),
+          asClient.sendRequest("sidebarItems"),
+          asClient.sendRequest("theme"),
+        ]);
 
-            Object.entries(colorVars).forEach(([key, value]) => {
-              document.documentElement.style.setProperty(key, value);
-            });
-          }
+        if (component) {
+          config.current = component.component;
+          setFullMetaConfig(component.fullMetaConfig);
+          setCompName(component.compName);
+          trigger((x) => x + 1);
         }
+
+        if (sidebar) {
+          setSidebarItems(sidebar.sidebarItems);
+        }
+
+        if (theme) {
+          Object.entries(theme).forEach(([key, value]) => {
+            document.documentElement.style.setProperty(key, value);
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load initial data via asClient:", err);
       }
     };
 
-    window.parent.postMessage(
-      { source: "APP", type: "request", request: { type: "componentConfig" } },
-      "*"
-    );
-    window.parent.postMessage(
-      { source: "APP", type: "request", request: { type: "sidebarItems" } },
-      "*"
-    );
-    window.parent.postMessage(
-      { source: "APP", type: "request", request: { type: "theme" } },
-      "*"
-    );
-
-    window.addEventListener("message", handleMessage);
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
+    loadInitialData();
   }, [setSidebarItems, trigger, setFullMetaConfig]);
 
-  const setConfig = useCallback((conf) => {
-    window.parent.postMessage(
-      {
-        source: "APP",
-        type: "resource",
-        resource: { type: "customConfig", customConfig: conf },
-      },
-      "*"
-    );
-    config.current = conf;
+  // Handling iframe to iframe communication
+  useEffect(() => {
+    asFrameHost.registerHandler("config", () => {
+      return config.current;
+    });
+
+    asFrameHost.registerHandler("UPDATE_CUSTOM_CONFIG", ({ newTree }) => {
+      config.current = newTree;
+      asClient.sendEvent("UPDATED_CONFIG_TO_HOST", { customConfig: newTree });
+      trigger((x) => x + 1);
+    });
+
+    return () => {
+      asFrameHost.removeHandler("config");
+      asFrameHost.removeHandler("UPDATE_CUSTOM_CONFIG");
+    };
+  }, [trigger]);
+
+  useEffect(() => {
+    const handleThemeChange = (theme) => {
+      Object.entries(theme).forEach(([key, value]) => {
+        document.documentElement.style.setProperty(key, value);
+      });
+    };
+
+    asClient.on("theme", handleThemeChange);
+    return () => {
+      asClient.off("theme", handleThemeChange);
+    };
   }, []);
+
+  // const setConfig = useCallback((conf) => {
+  //   asClient?.sendEvent("CUSTOM_CONFIG", { customConfig: conf });
+  //   config.current = conf;
+  // }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -116,50 +126,78 @@ const Container = () => {
     };
   }, [setSelectedItemId]);
 
-  const updateNodeById = (tree, nodeId, updates) => {
-    if (!tree) return tree;
-    if (tree.id === nodeId) {
-      return { ...tree, ...updates };
-    }
+  // const updateNodeById = useCallback((tree, nodeId, updates) => {
+  //   if (!tree) return tree;
+  //   if (tree.id === nodeId) {
+  //     return { ...tree, ...updates };
+  //   }
 
-    let updatedChildren = tree.children?.map((child) =>
-      updateNodeById(child, nodeId, updates)
-    );
+  //   let updatedChildren = tree.children?.map((child) =>
+  //     updateNodeById(child, nodeId, updates)
+  //   );
 
-    return {
-      ...tree,
-      ...(updatedChildren ? { children: updatedChildren } : {}),
-      ...(tree.elementType === "CONDITIONAL"
-        ? {
-            trueCase: updateNodeById(tree.trueCase, nodeId, updates),
-            falseCase: updateNodeById(tree.falseCase, nodeId, updates),
-          }
-        : {}),
+  //   return {
+  //     ...tree,
+  //     ...(updatedChildren ? { children: updatedChildren } : {}),
+  //     ...(tree.elementType === "CONDITIONAL"
+  //       ? {
+  //           trueCase: updateNodeById(tree.trueCase, nodeId, updates),
+  //           falseCase: updateNodeById(tree.falseCase, nodeId, updates),
+  //         }
+  //       : {}),
+  //   };
+  // }, []);
+  console.log(config.current , "CHECKING CONFIG");
+
+  // const deleteNodeById = (tree, nodeId) => {
+  //   if (!tree) return null;
+  //   if (tree.id === nodeId) return null;
+
+  //   let newChildren = tree.children
+  //     ?.map((child) => deleteNodeById(child, nodeId))
+  //     .filter(Boolean);
+
+  //   return {
+  //     ...tree,
+  //     ...(newChildren ? { children: newChildren } : {}),
+  //     ...(tree.elementType === "CONDITIONAL"
+  //       ? {
+  //           trueCase: deleteNodeById(tree.trueCase, nodeId),
+  //           falseCase: deleteNodeById(tree.falseCase, nodeId),
+  //         }
+  //       : {}),
+  //   };
+  // };
+
+  useEffect(() => {
+    const func = (item) => {
+      asFrameHost.sendEvent("updateItemConfig", item);
+      console.log(item);
     };
-  };
 
-  const deleteNodeById = (tree, nodeId) => {
-    if (!tree) return null;
-    if (tree.id === nodeId) return null;
-
-    let newChildren = tree.children
-      ?.map((child) => deleteNodeById(child, nodeId))
-      .filter(Boolean);
-
-    return {
-      ...tree,
-      ...(newChildren ? { children: newChildren } : {}),
-      ...(tree.elementType === "CONDITIONAL"
-        ? {
-            trueCase: deleteNodeById(tree.trueCase, nodeId),
-            falseCase: deleteNodeById(tree.falseCase, nodeId),
-          }
-        : {}),
+    const func2 = async (item) => {
+      return await asClient.sendRequest("FETCH_CONFIG", item);
     };
-  };
+
+    const func3 = (config) => {
+      console.log("Received widgetConfig from Breeze", config);
+      asFrameHost.sendEvent("widgetConfig", config);
+    };
+
+    asFrameHost.registerHandler("FETCH_CONFIG", func2);
+
+    asClient.on("updateItemConfig", func);
+    asClient.registerHandler("widgetConfig", func3);
+
+    return () => {
+      asClient.off("updateItemConfig", func);
+      asFrameHost.removeHandler("FETCH_CONFIG");
+      asClient.removeHandler("widgetConfig", func3);
+    };
+  }, []);
 
   const toggle = () => {
-    window.parent.postMessage({ source: "APP", action: "TOGGLE_SIDEBAR" }, "*");
+    asClient?.sendRequest("TOGGLE_SIDEBAR");
   };
 
   const handleMouseMove = (e) => {
@@ -176,11 +214,8 @@ const Container = () => {
     isResizingRef.current = true;
     document.body.style.cursor = "col-resize";
 
-    const sidebar = sidebarRef.current;
-    const pageContainer = pageContainerRef.current;
-
-    if (sidebar) sidebar.classList.add("no-transition");
-    if (pageContainer) pageContainer.classList.add("no-transition");
+    sidebarRef.current?.classList.add("no-transition");
+    pageContainerRef.current?.classList.add("no-transition");
 
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", stopResizing);
@@ -190,11 +225,8 @@ const Container = () => {
     isResizingRef.current = false;
     document.body.style.cursor = "default";
 
-    const sidebar = sidebarRef.current;
-    const pageContainer = pageContainerRef.current;
-
-    if (sidebar) sidebar.classList.remove("no-transition");
-    if (pageContainer) pageContainer.classList.remove("no-transition");
+    sidebarRef.current?.classList.remove("no-transition");
+    pageContainerRef.current?.classList.remove("no-transition");
 
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", stopResizing);
@@ -246,38 +278,6 @@ const Container = () => {
                   compName={compName}
                   treeExpanded
                   node={config.current}
-                  setItem={(updatedNode) => {
-                    const prevTree = deepCopy(config.current);
-                    const newTree = updateNodeById(
-                      config.current,
-                      updatedNode.id,
-                      updatedNode
-                    );
-                    config.current = newTree;
-                    trigger((x) => x + 1);
-                    setConfig(newTree);
-                    pushChanges({
-                      doChanges: () => {
-                        config.current = prevTree;
-                        trigger((x) => x + 1);
-                        setConfig(prevTree);
-                      },
-                    });
-                  }}
-                  handleDeleteItem={(id) => {
-                    const prevTree = deepCopy(config.current);
-                    const newTree = deleteNodeById(config.current, id);
-                    config.current = newTree;
-                    trigger((x) => x + 1);
-                    setConfig(newTree);
-                    pushChanges({
-                      doChanges: () => {
-                        config.current = prevTree;
-                        trigger((x) => x + 1);
-                        setConfig(prevTree);
-                      },
-                    });
-                  }}
                 />
               </div>
             )}
@@ -285,7 +285,6 @@ const Container = () => {
         </div>
       </div>
 
-      {/* Resizer */}
       <div
         className="brDnd-resizer"
         onMouseDown={!isPreview ? startResizing : undefined}
@@ -307,13 +306,16 @@ const Container = () => {
         >
           <div className={`${isPreview ? "brDnd-hidden" : ""} d-flex`}>
             <span
-              onClick={undoChanges}
+              // onClick={undoChanges}
               className="mx-2"
-              disabled={undoStack.length === 0}
+              // disabled={undoStack.length === 0}
             >
               <img src={undoButton} alt="undo" />
             </span>
-            <span onClick={redoChanges} disabled={redoStack.length === 0}>
+            <span 
+            // onClick={redoChanges}
+            //  disabled={redoStack.length === 0}
+             >
               <img src={redoButton} alt="redo" />
             </span>
           </div>
@@ -322,6 +324,7 @@ const Container = () => {
               className="brDnd-toggleButton"
               onClick={() => {
                 setIsPreview((prev) => !prev);
+                asFrameHost.sendEvent("TOGGLE_PREVIEW", { isPreview });
                 toggle();
               }}
             >
@@ -331,11 +334,22 @@ const Container = () => {
         </div>
         <div className="brDnd-page" id="page">
           {config.current && config.current.elementType ? (
-            <Renderer
-              item={config.current}
-              heirarchy={[config.id]}
-              isPreview={isPreview}
-              updateItem={setConfig}
+            // <Renderer
+            //   item={config.current}
+            //   heirarchy={[config.current.id]}
+            //   isPreview={isPreview}
+            //   updateItem={setConfig}
+            // />
+            <iframe
+              src="/breeze/renderer-frame"
+              id="config-renderer-iframe"
+              ref={iframe2Ref}
+              title="Renderer Frame"
+              width="100%"
+              height="100%"
+              onLoad={() => {
+                asFrameHost.setTargetWindow(iframe2Ref.current?.contentWindow);
+              }}
             />
           ) : (
             <p>Loading...</p>

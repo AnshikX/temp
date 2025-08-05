@@ -10,7 +10,7 @@ import Renderer from "../Renderer";
 import { useSelectedItemId, useSetters } from "../contexts/SelectionContext";
 import { usePushChanges } from "../contexts/UndoRedoContext";
 import deepCopy from "../../utils/deepcopy";
-
+import { asFrameClient } from "../postMessageBridge";
 const ConditionalRendererX = ({
   drag,
   item,
@@ -21,7 +21,7 @@ const ConditionalRendererX = ({
   heirarchy,
   isPreview,
   updateItem,
-  zbase
+  zbase,
 }) => {
   const [currentItem, setCurrentItem] = useState(item);
   const selectedItemId = useSelectedItemId();
@@ -31,7 +31,7 @@ const ConditionalRendererX = ({
 
   const updateCurrentItem = useCallback(
     (stateOrCallBack) => {
-      console.log('object')
+      console.log("object");
       setCurrentItem((prev) => {
         let next;
         if (typeof stateOrCallBack === "function") {
@@ -39,7 +39,7 @@ const ConditionalRendererX = ({
         } else {
           next = stateOrCallBack;
         }
-       
+
         const undoTo = deepCopy(previousConfigRef.current);
         previousConfigRef.current = deepCopy(next);
         setTimeout(() => {
@@ -67,24 +67,46 @@ const ConditionalRendererX = ({
     }
   }, [selectedItemId, currentItem, setItemDetails, updateCurrentItem]);
 
+  // useEffect(() => {
+  //   if (selectedItemId !== currentItem.id) return;
+
+  //   const handleMessageEvent = (event) => {
+  //     if (event.data?.source === "BREEZE" && event.data.type === "resource") {
+  //       const { resource } = event.data;
+  //       if (resource.type === "updateItem") {
+  //         updateCurrentItem(resource.itemConfig);
+  //       }
+  //     }
+  //   };
+
+  //   window.addEventListener("message", handleMessageEvent);
+  //   return () => window.removeEventListener("message", handleMessageEvent);
+  // }, [selectedItemId, currentItem.id, updateCurrentItem]);
+
   useEffect(() => {
     if (selectedItemId !== currentItem.id) return;
 
-    const handleMessageEvent = (event) => {
-      if (event.data?.source === "BREEZE" && event.data.type === "resource") {
-        const { resource } = event.data;
-        if (resource.type === "updateItem") {
-          // console.log(resource);
-          // setCurrentItem(resource.itemConfig);
-          // updateItem(resource.itemConfig);
-          updateCurrentItem(resource.itemConfig);
-        }
-      }
+    const handleItemChange = (itemConfig) => {
+      updateCurrentItem(itemConfig);
     };
 
-    window.addEventListener("message", handleMessageEvent);
-    return () => window.removeEventListener("message", handleMessageEvent);
+    asFrameClient.on("updateItemConfig", handleItemChange);
+    return () => {
+      asFrameClient.off("updateItemConfig", handleItemChange);
+    };
   }, [selectedItemId, currentItem.id, updateCurrentItem]);
+
+  useEffect(() => {
+    const handler = (data) => {
+      updateCurrentItem((prev) => ({
+        ...prev,
+        label: data.label,
+      }));
+    };
+
+    asFrameClient.on(`UPDATE_LABEL+${currentItem.id}`, handler);
+    return () => asFrameClient.off(`UPDATE_LABEL+${currentItem.id}`, handler);
+  }, [currentItem.id, updateCurrentItem]);
 
   const stableTrueHeirarchy = useMemo(
     () => [...heirarchy, currentItem?.trueCase?.id],
@@ -201,7 +223,7 @@ ConditionalRendererX.propTypes = {
   updateItem: PropTypes.func.isRequired,
   heirarchy: PropTypes.array.isRequired,
   isPreview: PropTypes.bool.isRequired,
-  zbase: PropTypes.number.isRequired
+  zbase: PropTypes.number.isRequired,
 };
 
 export default ConditionalRenderer;

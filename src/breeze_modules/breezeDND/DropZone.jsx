@@ -1,24 +1,25 @@
 import PropTypes from "prop-types";
-import { useEffect, useRef } from "react";
-import { useDrop, useDragLayer } from "react-dnd";
+import { useEffect, useRef, useState } from "react";
 import "./styles/Dropzone.css";
 import { useVisibility } from "./contexts/VisibilityContext";
+import { asFrameClient } from "./postMessageBridge";
+import { useCustomDrop } from "./dragndropUtils/useCustomDrop";
+import { dragState } from "./dragndropUtils/dragState";
+import { getDragHandler, removeDragHandler } from "./dragndropUtils/dragFunctionRegistry";
 
 const dropzoneRegistry = new Set();
 
-// Maximum number of dropzones to show at once
 const MAX_VISIBLE = 3;
-// The maximum distance (in pixels) from the dropzone's edge at which it will be considered
-const MAX_DISTANCE = 20; // adjust as needed
+const MAX_DISTANCE = 20;
 
-// Compute the minimal distance from a point to a rectangle
 function distanceToRect(x, y, rect) {
   const dx = Math.max(rect.left - x, 0, x - rect.right);
   const dy = Math.max(rect.top - y, 0, y - rect.bottom);
   return Math.sqrt(dx * dx + dy * dy);
 }
-
-const ACCEPTS = ["HTML", "TEXT"];
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 const DropZone = ({
   onDrop,
   children,
@@ -30,57 +31,62 @@ const DropZone = ({
   const dropZoneRef = useRef();
   const { setHoveredItemId } = useVisibility();
 
-  const [, drop] = useDrop(
-    {
-      accept: ACCEPTS,
-      drop: ({ item, myOnDrop, getItem }) => {
-        if (myOnDrop) myOnDrop();
-        if (getItem) {
-          const temp = getItem(item);
-          if (temp.elementType === "WIDGET") {
-            // Send to Breeze, wait for response, then call onDrop
-            const widgetListener = (event) => {
-              if (
-                event.data?.source === "BREEZE" &&
-                event.data.type === "widgetConfig"
-              ) {
-                onDrop(event.data.config);
-                window.removeEventListener("message", widgetListener);
-              }
-            };
-
-            window.addEventListener("message", widgetListener);
-
-            window.parent.postMessage(
-              {
-                source: "APP",
-                action: "FETCH_CONFIG",
-                widgetConfig: temp,
-              },
-              "*"
-            );
-          } else {
-            onDrop(temp);
-          }
-        } else if (item) onDrop(item);
-        else console.warn("Something went wrong");
-
-        dropzoneRegistry.forEach(({ el }) => {
-          el.classList.remove("visible");
-          el.classList.remove("highlighted");
+  const drop = useCustomDrop({
+    onDrop: async (data) => {
+      await sleep(0);
+      // Case 1: If dragId is present, use registered function handler
+      if (data?.dragId) {
+        const fn = getDragHandler(data.dragId);
+        if (fn) {
+          fn(data.item); // pass the payload
+          removeDragHandler(data.dragId);
+          return;
+        }
+      }
+      // Case 2: WIDGET — fetch widget config and call onDrop with config
+      else if (data?.item.elementType === "WIDGET") {
+        asFrameClient.on("widgetConfig", (config) => {
+          onDrop(config);
+          asFrameClient.off("widgetConfig");
         });
-      },
-      canDrop: ({ item }) => (item ? !heirarchy.includes(item.id) : true),
+        console.log("Sending FETCH_CONFIG to Breeze", data.item);
+        asFrameClient.sendRequest("FETCH_CONFIG", data.item);
+      }
+      // Case 3: Default — call onDrop directly
+      else {
+        console.log('coming herre')
+        onDrop(data.item);
+      }
+
+      // Clean up dropzone visuals
+      dropzoneRegistry.forEach(({ el }) => {
+        el.classList.remove("visible");
+        el.classList.remove("highlighted");
+      });
     },
-    [onDrop, heirarchy]
-  );
 
-  const { isDragging, item } = useDragLayer((monitor) => ({
-    isDragging: monitor.isDragging(),
-    item: monitor.getItem(),
-  }));
+    canDrop: (data) => (data?.id ? !heirarchy.includes(data.id) : true),
+  });
 
-  // Apply row/col drop class based on parent's layout
+  // const { isDragging, item } = useDragLayer((monitor) => ({
+  //   isDragging: monitor.isDragging(),
+  //   item: monitor.getItem(), 
+  // }));
+  const [isDragging, setIsDragging] = useState(dragState.get().isDragging);
+  const [dragItem, setDragItem] = useState(dragState.get().data?.item ?? null);
+
+useEffect(() => {
+    // The subscribe function returns an unsubscribe function for cleanup
+    const unsubscribe = dragState.subscribe((newState) => {
+      setIsDragging(newState.isDragging);
+      setDragItem(newState.data?.item ?? null);
+    });
+
+    // Cleanup on unmount
+    return unsubscribe;
+  }, []); // Empty array ensures this runs only on mount and unmount
+
+
   useEffect(() => {
     const el = dropZoneRef.current;
     if (!el) return;
@@ -140,121 +146,118 @@ const DropZone = ({
     };
   }, [ownerId, heirarchy]);
 
-  // Proximity logic to determine which dropzones become visible and which one is highlighted
- useEffect(() => {
-  if (!isDragging) {
-    dropzoneRegistry.forEach(({ el }) => {
-      el.classList.remove("visible");
-      el.classList.remove("highlighted");
-    });
-    setHoveredItemId(null);
-    return;
-  }
-
-  let animationFrame = null;
-  let lastVisible = new Set();
-
-  const handleMouseMove = (e) => {
-    if (animationFrame !== null) {
-      cancelAnimationFrame(animationFrame);
+  useEffect(() => {
+    if (!isDragging) {
+      dropzoneRegistry.forEach(({ el }) => {
+        el.classList.remove("visible");
+        el.classList.remove("highlighted");
+      });
+      setHoveredItemId(null);
+      return;
     }
 
-    animationFrame = requestAnimationFrame(() => {
-      const { clientX: cursorX, clientY: cursorY } = e;
+    let animationFrame = null;
+    let lastVisible = new Set();
 
-      // Skip if already inside highlighted zone
-      for (const { el } of dropzoneRegistry) {
-        if (el.classList.contains("highlighted")) {
+    const handleMouseMove = (e) => {
+      if (animationFrame !== null) {
+        cancelAnimationFrame(animationFrame);
+      }
+
+      animationFrame = requestAnimationFrame(() => {
+        const { clientX: cursorX, clientY: cursorY } = e;
+
+        for (const { el } of dropzoneRegistry) {
+          if (el.classList.contains("highlighted")) {
+            const rect = el.getBoundingClientRect();
+            if (
+              cursorX >= rect.left &&
+              cursorX <= rect.right &&
+              cursorY >= rect.top &&
+              cursorY <= rect.bottom
+            ) {
+              return;
+            }
+          }
+        }
+
+        const distances = [];
+        dropzoneRegistry.forEach(({ el, heirarchy }) => {
+          if (dragItem?.item?.id && heirarchy?.includes(dragItem.item.id)) return;
           const rect = el.getBoundingClientRect();
+          const dist = distanceToRect(cursorX, cursorY, rect);
+          distances.push({ el, dist, rect });
+        });
+
+        distances.sort((a, b) => a.dist - b.dist);
+
+        let threshold = MAX_DISTANCE;
+        const MAX_DISTANCE_LIMIT = 2000;
+        let visibleCandidates = [];
+
+        while (threshold <= MAX_DISTANCE_LIMIT) {
+          visibleCandidates = distances.filter(({ dist }) => dist <= threshold);
+          if (visibleCandidates.length >= MAX_VISIBLE) break;
+          threshold += 10;
+        }
+
+        const newVisible = new Set(
+          visibleCandidates.slice(0, MAX_VISIBLE).map(({ el }) => el)
+        );
+
+        let bestMatch = null;
+        for (const { el, rect } of distances) {
           if (
             cursorX >= rect.left &&
             cursorX <= rect.right &&
             cursorY >= rect.top &&
             cursorY <= rect.bottom
           ) {
-            return;
+            bestMatch = el;
+            break;
           }
         }
-      }
 
-      const distances = [];
-      dropzoneRegistry.forEach(({ el, heirarchy }) => {
-        if (item?.item?.id && heirarchy?.includes(item.item.id)) return;
-        const rect = el.getBoundingClientRect();
-        const dist = distanceToRect(cursorX, cursorY, rect);
-        distances.push({ el, dist, rect });
-      });
+        dropzoneRegistry.forEach(({ el }) => {
+          const shouldBeVisible = newVisible.has(el);
+          const wasVisible = lastVisible.has(el);
 
-        // Sort by distance (smallest first)
-      distances.sort((a, b) => a.dist - b.dist);
+          if (shouldBeVisible && !wasVisible) {
+            el.classList.add("visible");
+          } else if (!shouldBeVisible && wasVisible) {
+            el.classList.remove("visible");
+          }
+          el.classList.remove("highlighted");
+        });
 
-      let threshold = MAX_DISTANCE;
-        const MAX_DISTANCE_LIMIT = 2000; // Max distance to consider
-      let visibleCandidates = [];
-
-      while (threshold <= MAX_DISTANCE_LIMIT) {
-        visibleCandidates = distances.filter(({ dist }) => dist <= threshold);
-        if (visibleCandidates.length >= MAX_VISIBLE) break;
-        threshold += 10;
-      }
-
-      const newVisible = new Set(
-        visibleCandidates.slice(0, MAX_VISIBLE).map(({ el }) => el)
-      );
-
-      let bestMatch = null;
-      for (const { el, rect } of distances) {
-        if (
-          cursorX >= rect.left &&
-          cursorX <= rect.right &&
-          cursorY >= rect.top &&
-          cursorY <= rect.bottom
-        ) {
-          bestMatch = el;
-          break;
+        if (bestMatch) {
+          bestMatch.classList.add("highlighted");
+          const matchOwnerId = bestMatch.dataset.ownerId;
+          setHoveredItemId(matchOwnerId || null);
+        } else {
+          setHoveredItemId(null);
         }
-      }
 
-      dropzoneRegistry.forEach(({ el }) => {
-        const shouldBeVisible = newVisible.has(el);
-        const wasVisible = lastVisible.has(el);
-
-        if (shouldBeVisible && !wasVisible) {
-          el.classList.add("visible");
-        } else if (!shouldBeVisible && wasVisible) {
-          el.classList.remove("visible");
-        }
-        el.classList.remove("highlighted");
+        lastVisible = newVisible;
       });
+    };
 
-      if (bestMatch) {
-        bestMatch.classList.add("highlighted");
-        const matchOwnerId = bestMatch.dataset.ownerId;
-        setHoveredItemId(matchOwnerId || null);
-      } else {
-        setHoveredItemId(null);
+    window.addEventListener("dragover", handleMouseMove);
+    return () => {
+      window.removeEventListener("dragover", handleMouseMove);
+      if (animationFrame !== null) {
+        cancelAnimationFrame(animationFrame);
       }
+    };
+  }, [isDragging, ownerId, setHoveredItemId, dragItem]);
 
-      lastVisible = newVisible;
-    });
-  };
-
-  window.addEventListener("dragover", handleMouseMove);
-  return () => {
-    window.removeEventListener("dragover", handleMouseMove);
-    if (animationFrame !== null) {
-      cancelAnimationFrame(animationFrame);
-    }
-  };
-}, [isDragging, ownerId, setHoveredItemId, item]);
-
-  const isMatchId = item?.item?.id === ownerId;
+  const isMatchId = dragItem?.item?.id === ownerId;
 
   return (
     <div
       ref={(node) => {
-        drop(node);
         dropZoneRef.current = node;
+        drop.current = node;
       }}
       style={{
         zIndex: isMatchId ? zbase + 2 : zbase + 5,

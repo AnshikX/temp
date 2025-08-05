@@ -776,6 +776,11 @@ const entityDetails = {
     "from": "/src/components/sdfgh.jsx",
     "default": true
   },
+  "add71e85_43d0_464d_9bf5_8d0f82d2067a": {
+    "exportedAs": "Mm",
+    "from": "/src/components/mm.jsx",
+    "default": true
+  },
   "ae01c8bf_ac51_4ab2_9d85_3080a072dccd": {
     "exportedAs": "configEditorUpdateProjectConfigCreate",
     "from": "/src/services/Breeze API/config-editor.jsx",

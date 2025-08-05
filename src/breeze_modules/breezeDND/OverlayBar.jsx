@@ -18,6 +18,7 @@ const OverlayBar = ({
   overDetails,
   item,
   updateItem,
+  onDuplicate,
 }) => {
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
   const overlayRef = useRef(null);
@@ -65,8 +66,8 @@ const OverlayBar = ({
     if (!el) return { top: 0, left: 0, width: 0, height: 0 };
     const rect = el.getBoundingClientRect();
     return {
-      top: rect.top + window.scrollY,
-      left: rect.left + window.scrollX,
+      top: rect.top,
+      left: rect.left,
       width: rect.width,
       height: rect.height,
     };
@@ -172,6 +173,39 @@ const OverlayBar = ({
     pointerEvents: "none",
     display: pos.width === 0 || pos.height === 0 ? "none" : "block",
   };
+
+
+  const TOOLBAR_HEIGHT = 34;
+  const TOOLBAR_WIDTH = 240;
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+
+  const canPlaceAbove = pos.top - TOOLBAR_HEIGHT >= 0;
+  const canPlaceBelow = pos.top + pos.height + TOOLBAR_HEIGHT <= viewportHeight;
+
+  let overlayTop = pos.top;
+  let overlayPosition = "top";
+
+  if (canPlaceAbove) {
+    overlayTop = pos.top;
+    overlayPosition = "top";
+  } else if (canPlaceBelow) {
+    overlayTop = pos.top + pos.height;
+    overlayPosition = "bottom";
+  } else {
+    overlayTop = Math.max(
+      0,
+      Math.min(pos.top, viewportHeight - TOOLBAR_HEIGHT)
+    );
+    overlayPosition = "forced";
+  }
+
+  let overlayLeft = pos.left;
+  if (overlayLeft < 0) overlayLeft = 0;
+  if (overlayLeft + TOOLBAR_WIDTH > viewportWidth) {
+    overlayLeft = viewportWidth - TOOLBAR_WIDTH;
+  }
+
   return createPortal(
     <>
       <div
@@ -183,14 +217,13 @@ const OverlayBar = ({
         <ResizerHandles
           isVisible={
             selectedItemId === item.id &&
-            (item.elementType !== "TEXT" &&
-              item.elementType !== "BREEZE_COMPONENT" &&
-              item.elementType !== "THIRD_PARTY" &&
-              item.elementType !== "COMPONENT" && 
-              item.elementType !== "CONDITIONAL" &&
-              item.elementType !== "MAP" &&
-              item.tagName !== "fragment"
-            )
+            item.elementType !== "TEXT" &&
+            item.elementType !== "BREEZE_COMPONENT" &&
+            item.elementType !== "THIRD_PARTY" &&
+            item.elementType !== "COMPONENT" &&
+            item.elementType !== "CONDITIONAL" &&
+            item.elementType !== "MAP" &&
+            item.tagName !== "fragment"
           }
           pos={pos}
           startResize={startResize}
@@ -199,13 +232,15 @@ const OverlayBar = ({
 
       {isVisible && (
         <OverlayToolbar
-          top={pos.top}
+          top={overlayTop}
+          position={overlayPosition}
           left={pos.left}
           label={overDetails?.label || itemLabel}
           labelSuffix={overDetails?.labelSuffix}
           onDelete={onDelete}
           isFirst={isFirst}
           onHover={setIsHovered}
+          onDuplicate={onDuplicate}
         />
       )}
     </>,
@@ -221,6 +256,7 @@ OverlayBar.propTypes = {
   isVisible: PropTypes.bool.isRequired,
   setIsHovered: PropTypes.func.isRequired,
   isFirst: PropTypes.bool.isRequired,
+  onDuplicate: PropTypes.func,
 };
 
 export default OverlayBar;

@@ -13,6 +13,7 @@ import { getValue } from "../utils/processAttributesFunction";
 import SwitchRenderer from "./SwitchRenderer";
 import { usePushChanges } from "../contexts/UndoRedoContext";
 import deepCopy from "../../utils/deepcopy";
+import { asFrameClient } from "../postMessageBridge";
 
 const CombinedRenderer = ({
   item: config,
@@ -63,7 +64,7 @@ const CombinedRenderer = ({
   );
 
   useEffect(() => {
-    setCurrentItem(config); 
+    setCurrentItem(config);
   }, [config]);
 
   useEffect(() => {
@@ -73,30 +74,42 @@ const CombinedRenderer = ({
   }, [selectedItemId, currentItem, setItemDetails]);
 
   useEffect(() => {
-    if (selectedItemId !== config.id) return;
+    if (selectedItemId !== currentItem.id) return;
 
-    const handleMessageEvent = (event) => {
-      if (event.data?.source === "BREEZE" && event.data.type === "resource") {
-        const { resource } = event.data;
-        if (resource.type === "updateItem") {
-          updateCurrentItem((item) => {
-            resource.itemConfig.children = item?.children;
-            if (JSON.stringify(resource.itemConfig) !== JSON.stringify(item)) {
-              return resource.itemConfig;
-            } else {
-              return item;
-            }
-          });
+    const handleItemChange = (itemConfig) => {
+      updateCurrentItem((item) => {
+        itemConfig.children = item?.children;
+        if (JSON.stringify(itemConfig) !== JSON.stringify(item)) {
+          return itemConfig;
+        } else {
+          return item;
         }
-      }
+      });
     };
 
-    window.addEventListener("message", handleMessageEvent);
-    return () => window.removeEventListener("message", handleMessageEvent);
-  }, [selectedItemId, config.id, updateCurrentItem]);
+    asFrameClient.on("updateItemConfig", handleItemChange);
+    return () => {
+      asFrameClient.off("updateItemConfig", handleItemChange);
+    };
+  }, [selectedItemId, currentItem.id, updateCurrentItem]);
+
+  useEffect(() => {
+    const updateLabel = (data) => {
+      updateCurrentItem((prev) => ({
+        ...prev,
+        label: data.label,
+      }));
+    };
+
+    asFrameClient.on(`UPDATE_LABEL+${currentItem.id}`, updateLabel);
+    return () => {
+      asFrameClient.off(`UPDATE_LABEL+${currentItem.id}`, updateLabel);
+    };
+  }, [currentItem.id, updateCurrentItem]);
 
   const addChild = useCallback(
     (newChild, offset, index) => {
+      console.log(newChild, offset, index);
       updateCurrentItem((prevItem) => {
         let updatedChildren = [...prevItem.children];
         let pos = index + offset;
@@ -113,6 +126,7 @@ const CombinedRenderer = ({
 
   const removeChild = useCallback(
     (id) => {
+      console.log("THIS MUST NE WOKRI");
       updateCurrentItem((prevItem) => {
         const updatedItem = { ...prevItem };
         const index = prevItem.children.findIndex((c) => c.id === id);
