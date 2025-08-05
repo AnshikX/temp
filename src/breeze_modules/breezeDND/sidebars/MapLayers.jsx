@@ -48,6 +48,7 @@ const MapLayers = ({ node, handleSelect, selectedTab, handleDeleteItem, level })
     <>
       {selectedConfigPaths.map((path, index) => {
         const childNode = extractConfig(path, node);
+        console.log(childNode, "childNode");
         if (!childNode) return null;
         return (
           <Layers

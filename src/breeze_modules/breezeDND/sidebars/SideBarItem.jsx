@@ -22,7 +22,9 @@ const SideBarItem = ({ sidebarItems }) => {
     html: false,
     components: false,
     third_party: false,
-    widgets: true,
+    widgets: false,
+    breeze_components: false,
+    breeze_templates: true,
   });
 
   const filteredHtmlItems = useMemo(
@@ -36,6 +38,14 @@ const SideBarItem = ({ sidebarItems }) => {
   const filteredWidgets = useMemo(
     () => filterItems(sidebarItems.widgets, searchQuery),
     [sidebarItems.widgets, searchQuery]
+  );
+  const filteredBreezeComponents = useMemo(
+    () => filterItems(sidebarItems.breeze_components, searchQuery),
+    [sidebarItems.breeze_components, searchQuery]
+  );
+  const filteredBreezeTemplates = useMemo(
+    () => filterItems(sidebarItems.breeze_templates, searchQuery),
+    [sidebarItems.breeze_templates, searchQuery]
   );
 
   const filteredLibs = useMemo(() => {
@@ -58,6 +68,8 @@ const SideBarItem = ({ sidebarItems }) => {
     components: filteredComponents.length,
     third_party: filteredLibs.length,
     widgets: filteredWidgets.length,
+    breeze_components: filteredBreezeComponents.length,
+    breeze_templates: filteredBreezeTemplates.length,
   });
 
   useEffect(() => {
@@ -66,8 +78,17 @@ const SideBarItem = ({ sidebarItems }) => {
       components: filteredComponents.length,
       third_party: filteredLibs.length,
       widgets: filteredWidgets.length,
+      breeze_components: filteredBreezeComponents.length,
+      breeze_templates: filteredBreezeTemplates.length,
     };
-  }, [filteredHtmlItems, filteredComponents, filteredLibs, filteredWidgets]);
+  }, [
+    filteredHtmlItems,
+    filteredComponents,
+    filteredLibs,
+    filteredWidgets,
+    filteredBreezeComponents,
+    filteredBreezeTemplates,
+  ]);
 
   const formatLibName = (libName) => {
     if (!libName) return "";
@@ -119,7 +140,10 @@ const SideBarItem = ({ sidebarItems }) => {
       if (lengths.current.html > 0) shouldOpen.html = true;
       if (lengths.current.components > 0) shouldOpen.components = true;
       if (lengths.current.widgets > 0) shouldOpen.widgets = true;
-      if (lengths.current.third_party > 0) shouldOpen.third_party = true;
+      if (lengths.current.breeze_components > 0)
+        shouldOpen.breeze_components = true;
+      if (lengths.current.breeze_templates > 0)
+        shouldOpen.breeze_templates = true;
     }
     if (Object.keys(shouldOpen).length > 0) {
       setOpenSections((prev) => ({ ...prev, ...shouldOpen }));
@@ -196,6 +220,11 @@ const SideBarItem = ({ sidebarItems }) => {
                       onClick={() => toggleLibrary(libName)}
                     >
                       <span>{formatLibName(libName)}</span>
+                      <img
+                        src={expandedLibs[libName] ? upArrow : downArrow}
+                        className="inline ml-2"
+                        alt="toggle"
+                      />
                       <img
                         src={expandedLibs[libName] ? upArrow : downArrow}
                         className="inline ml-2"
@@ -281,6 +310,16 @@ const SideBarItem = ({ sidebarItems }) => {
           open={openSections.widgets}
           items={filteredWidgets}
         />
+        <SidebarSection
+          title="Breeze Components"
+          open={openSections.breeze_components}
+          items={filteredBreezeComponents}
+        />
+        <SidebarSection
+          title="Breeze Templates"
+          open={openSections.breeze_templates}
+          items={filteredBreezeTemplates}
+        />
       </div>
     </div>
   );
@@ -292,6 +331,8 @@ SideBarItem.propTypes = {
     components: PropTypes.array.isRequired,
     third_party: PropTypes.array.isRequired,
     widgets: PropTypes.array.isRequired,
+    breeze_components: PropTypes.array.isRequired,
+    breeze_templates: PropTypes.array,
   }).isRequired,
 };
 

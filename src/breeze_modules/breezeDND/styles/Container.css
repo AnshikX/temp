@@ -61,7 +61,9 @@
 #heading-third-party,
 #heading-HTML-Elements,
 #heading-Components,
-#heading-Widget-Elements {
+#heading-Widget-Elements,
+#heading-Breeze-Components,
+#heading-Breeze-Templates {
   background-color: var(--brDnd-color-secondary);
   color: var(--brDnd-color-text);
 }

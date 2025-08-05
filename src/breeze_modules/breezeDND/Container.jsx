@@ -18,6 +18,8 @@ const Container = () => {
     components: [],
     third_party: [],
     widgets: [],
+    breeze_components: [],
+    breeze_templates: [],
   });
   const [activeSidebarView, setActiveSidebarView] = useState("layers");
   const [isPreview, setIsPreview] = useState(false);
