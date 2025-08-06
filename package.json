@@ -29,7 +29,8 @@
     "@emotion/styled": "*",
     "react-chartjs-2": "*",
     "antd": "*",
-    "@chakra-ui/react": "*"
+    "@chakra-ui/react": "*",
+    "@breeze/ui-comp-library": "file:../../breezeui/breeze_comp_library"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
