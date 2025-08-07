@@ -109,7 +109,6 @@ const CombinedRenderer = ({
 
   const addChild = useCallback(
     (newChild, offset, index) => {
-      console.log(newChild, offset, index);
       updateCurrentItem((prevItem) => {
         let updatedChildren = [...prevItem.children];
         let pos = index + offset;
@@ -126,7 +125,6 @@ const CombinedRenderer = ({
 
   const removeChild = useCallback(
     (id) => {
-      console.log("THIS MUST NE WOKRI");
       updateCurrentItem((prevItem) => {
         const updatedItem = { ...prevItem };
         const index = prevItem.children.findIndex((c) => c.id === id);

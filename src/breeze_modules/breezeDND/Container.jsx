@@ -149,7 +149,6 @@ const Container = () => {
   //       : {}),
   //   };
   // }, []);
-  console.log(config.current , "CHECKING CONFIG");
 
   // const deleteNodeById = (tree, nodeId) => {
   //   if (!tree) return null;

@@ -54,7 +54,6 @@ const DropZone = ({
       }
       // Case 3: Default — call onDrop directly
       else {
-        console.log('coming herre')
         onDrop(data.item);
       }
 

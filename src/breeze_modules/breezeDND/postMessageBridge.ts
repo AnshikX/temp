@@ -1,5 +1,10 @@
+import { v4 as uuid4 } from "uuid";
+
 type Role = "HOST" | "CLIENT";
 
+function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 interface PostMessageRequest {
     source: Role;
     type: "request";
@@ -48,7 +53,7 @@ class PostMessageBridge {
     }> = new Map();
 
     private role: Role;
-    private targetRole: Role;
+    // private targetRole: Role;
     private targetWindow: Window | null;
     private targetOrigin: string;
     private channel: string;
@@ -56,7 +61,6 @@ class PostMessageBridge {
 
     constructor(role: Role, targetOrigin: string, channel: string) {
         this.role = role;
-        this.targetRole = role === "HOST" ? "CLIENT" : "HOST";
         if (this.role === "CLIENT") { this.targetWindow = parent; } else {
             this.targetWindow = null;
         }
@@ -74,7 +78,7 @@ class PostMessageBridge {
 
     /** Request-Response bridge */
     sendRequest(type: string, extras: Record<string, unknown> = {}): Promise<unknown> {
-        const requestId = crypto.randomUUID();
+        const requestId = uuid4();
         const msg: PostMessageRequest = {
             source: this.role,
             type: "request",
@@ -85,7 +89,7 @@ class PostMessageBridge {
             },
             channel: this.channel,
         };
-        
+
         return new Promise((resolve, reject) => {
             const timeoutId = setTimeout(() => {
                 this.pendingRequests.delete(requestId);
@@ -144,10 +148,10 @@ class PostMessageBridge {
     /** Internal message router */
     private onMessage = async (event: MessageEvent) => {
         const data = event.data;
-        if (event.origin !== this.targetOrigin && this.targetOrigin !== "*" || data?.source !== this.targetRole) return;
-   
+        if (event.origin !== this.targetOrigin && this.targetOrigin !== "*" && data?.channel === this.channel) return;
+
         // Response handler
-        if (data?.type === "response" && data?.channel === this.channel) {
+        if (data?.type === "response") {
             const { requestId, result, error } = data.response;
             const pending = this.pendingRequests.get(requestId);
             if (pending) {
@@ -158,21 +162,18 @@ class PostMessageBridge {
         }
 
         // Request handler
-        if (data?.type === "request" && data?.channel === this.channel) {
+        if (data?.type === "request") {
             const { type, requestId, ...extras } = data.request;
-            const handler = this.handlers[type];
-            if (!handler) {
-                try{
-                    throw new Error()
-                }catch (err) {
-                    console.error("Error handling request:", err.stack);
-                }
-                console.log(`No handler registered for request type '${type}' in role '${this.role}' channel '${this.channel}'` );
-                return;
-            }
-
-
+            let handler = this.handlers[type];
             try {
+                if (!handler) {
+                    await sleep(1000); // Wait for 1 second before logging
+                    handler = this.handlers[type];
+                    if (!handler) {
+                        throw new Error(`Handler for request type '${type}' not found`);
+                    }
+                }
+
                 const result = await handler(extras);
                 const response: PostMessageResponse = {
                     source: this.role,
@@ -207,7 +208,7 @@ class PostMessageBridge {
         }
 
         // Event handler
-        if (data?.type === "event" && data?.channel === this.channel) {
+        if (data?.type === "event") {
             const { eventName, payload } = data.event;
             this.eventListeners[eventName]?.forEach(cb => cb(payload));
         }
@@ -224,7 +225,7 @@ class PostMessageBridge {
     }
 }
 
-export const asClient = new PostMessageBridge("CLIENT", "*","BREEZE_TO_FRAME");
-export const asFrameHost = new PostMessageBridge("HOST", "*","FRAME_TO_FRAME");
-export const asFrameClient = new PostMessageBridge("CLIENT", "*","FRAME_TO_FRAME");
+export const asClient = new PostMessageBridge("CLIENT", "*", "BREEZE_TO_FRAME");
+export const asFrameHost = new PostMessageBridge("HOST", "*", "FRAME_TO_FRAME");
+export const asFrameClient = new PostMessageBridge("CLIENT", "*", "FRAME_TO_FRAME");
 
