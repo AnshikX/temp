@@ -19,6 +19,7 @@ const OverlayBar = ({
   item,
   updateItem,
   onDuplicate,
+  selectParent
 }) => {
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0, height: 0 });
   const overlayRef = useRef(null);
@@ -241,6 +242,7 @@ const OverlayBar = ({
           isFirst={isFirst}
           onHover={setIsHovered}
           onDuplicate={onDuplicate}
+          selectParent={selectParent}
         />
       )}
     </>,

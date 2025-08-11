@@ -1,22 +1,19 @@
 import { React } from "react";
-import { Container } from "react-bootstrap";
-import { Row } from "react-bootstrap";
-import { Col } from "react-bootstrap";
-const Mm = () => {
+const SimpleTabs = () => {
   return (
-    <div>
-      <Container>
-        <Row>
-          <Col>Hello World</Col>
-          <Col>Hello World</Col>
-        </Row>
-        <Row>
-          <Col>Hello World</Col>
-          <Col>Hello World</Col>
-        </Row>
-      </Container>
-      <div className={"row"} />
-    </div>
+    <Tabs className={"mb-3"} defaultActiveKey={"home"} id={"simple-tabs"}>
+      <Tab eventKey={"home"} title={"Home"}>
+        <p>Welcome to the Home tab!</p>
+      </Tab>
+      <Tab eventKey={"profile"} title={"Profile"}>
+        <p>This is the Profile tab content.</p>
+      </Tab>
+      <Tab eventKey={"contact"} title={"Contact"}>
+        <p>Contact tab content goes here.</p>
+      </Tab>
+      <Tabs />
+      <Tab title={"none"} />
+    </Tabs>
   );
 };
-export default Mm;
+export default SimpleTabs;

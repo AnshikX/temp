@@ -204,7 +204,7 @@ const Container = () => {
   const handleMouseMove = (e) => {
     const newWidth = Math.min(Math.max(e.clientX, 150), 600);
     sidebarWidthRef.current = newWidth;
-
+    iframe2Ref.current.style.pointerEvents = "none";
     if (sidebarRef.current && pageContainerRef.current) {
       sidebarRef.current.style.width = `${newWidth}px`;
       pageContainerRef.current.style.width = `calc(100% - ${newWidth + 6}px)`;
@@ -226,6 +226,7 @@ const Container = () => {
     isResizingRef.current = false;
     document.body.style.cursor = "default";
 
+    iframe2Ref.current.style.pointerEvents = "";
     sidebarRef.current?.classList.remove("no-transition");
     pageContainerRef.current?.classList.remove("no-transition");
 

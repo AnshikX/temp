@@ -94,7 +94,7 @@ class PostMessageBridge {
             const timeoutId = setTimeout(() => {
                 this.pendingRequests.delete(requestId);
                 reject(new Error(`Timeout waiting for response to '${type}'`));
-            }, 500);
+            }, 5000);
 
             this.pendingRequests.set(requestId, { resolve, reject, timeoutId });
 

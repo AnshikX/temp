@@ -220,11 +220,11 @@ const SideBarItem = ({ sidebarItems }) => {
                       onClick={() => toggleLibrary(libName)}
                     >
                       <span>{formatLibName(libName)}</span>
-                      <img
+                      {/* <img
                         src={expandedLibs[libName] ? upArrow : downArrow}
                         className="inline ml-2"
                         alt="toggle"
-                      />
+                      /> */}
                       <img
                         src={expandedLibs[libName] ? upArrow : downArrow}
                         className="inline ml-2"

@@ -21,7 +21,6 @@ const router = createBrowserRouter(
       <Route path="breeze/config-builder" element={<DNDRoot />} />
       <Route path="breeze/renderer-frame" element={<RendererFrameClientWrapper />} />
       <Route path="/" element={<App />}>
-        <Route path="/" element={<Main />} />
       </Route>
     </Route>,
   ),

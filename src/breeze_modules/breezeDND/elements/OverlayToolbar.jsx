@@ -10,6 +10,7 @@ const OverlayToolbar = ({
   onHover,
   onDuplicate,
   position,
+  selectParent,
 }) => {
   const TOOLBAR_WIDTH = 240;
   const viewportWidth = window.innerWidth;
@@ -49,8 +50,9 @@ const OverlayToolbar = ({
       <span>
         {label || "Unnamed Item"} {labelSuffix}
       </span>
-      {!isFirst && <i className="bi bi-trash" onClick={onDelete} style={{ cursor: "pointer" }} />}
+      {!isFirst && <i className="bi bi-arrow-up" onClick={selectParent} style={{ cursor: "pointer" }} />}
       {!isFirst && <i className="bi bi-clipboard-plus" onClick={onDuplicate} style={{ cursor: "pointer" }} />}
+      {!isFirst && <i className="bi bi-trash" onClick={onDelete} style={{ cursor: "pointer" }} />}
     </div>
   );
 };
@@ -64,7 +66,8 @@ OverlayToolbar.propTypes = {
   isFirst: PropTypes.bool.isRequired,
   onHover: PropTypes.func.isRequired,
   position: PropTypes.string.isRequired,
-  onDuplicate: PropTypes.func,
+  onDuplicate: PropTypes.func.isRequired,
+  selectParent: PropTypes.func.isRequired,
 };
 
 export default OverlayToolbar;

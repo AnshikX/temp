@@ -311,6 +311,11 @@ const entityDetails = {
     "from": "/src/services/Breeze API_1/manage-api-client.jsx",
     "default": false
   },
+  "3e7a3f97_91da_46b5_acb0_ae06914cffbf": {
+    "exportedAs": "Basetest",
+    "from": "/src/comptry/BaseTest.jsx",
+    "default": true
+  },
   "4048e468_cf95_43f8_8dc4_b2705e3ebbdc": {
     "exportedAs": "projectQueryResourceCreateURLENCODED",
     "from": "/src/services/Breeze API_1/query.jsx",
@@ -330,6 +335,11 @@ const entityDetails = {
     "exportedAs": "projectDeleteFileDestroy",
     "from": "/src/services/Breeze API/project.jsx",
     "default": false
+  },
+  "46716c46_00e3_4f65_9b97_b7c5fcbc5ce5": {
+    "exportedAs": "Car",
+    "from": "/src/comptry/Car.jsx",
+    "default": true
   },
   "488cf0ac_aa14_47b9_a46b_dc9779bff393": {
     "exportedAs": "projectUpdateThirdPartyDependencyUpdateURLENCODED",
@@ -385,6 +395,11 @@ const entityDetails = {
     "exportedAs": "configEditorManageApiClientAddSchemaUpdateJSON",
     "from": "/src/services/Breeze API_1/manage-api-client.jsx",
     "default": false
+  },
+  "559cabe6_1ff7_404a_8277_623ea9602ae5": {
+    "exportedAs": "SimpleTabs",
+    "from": "/src/components/mm.jsx",
+    "default": true
   },
   "55d66d30_d00d_434d_80ec_827959781780": {
     "exportedAs": "projectCustomPackageUploadCreateJSON",
@@ -681,6 +696,11 @@ const entityDetails = {
     "from": "/src/services/Breeze API/manage-api-client.jsx",
     "default": false
   },
+  "9b957524_1a97_4e05_8076_46e166289fc2": {
+    "exportedAs": "Testyy",
+    "from": "/src/comptry/TestYY.jsx",
+    "default": true
+  },
   "9e780c70_0dbe_4f00_b0b2_8464eda37007": {
     "exportedAs": "configEditorManageApiClientAddSchemaUpdateURLENCODED",
     "from": "/src/services/Breeze API/manage-api-client.jsx",
@@ -805,6 +825,11 @@ const entityDetails = {
     "exportedAs": "configEditorManageApiClientAddModuleCreateFORMDATA",
     "from": "/src/services/Breeze API/manage-api-client.jsx",
     "default": false
+  },
+  "b194a8d4_efcc_46e3_905c_45eb0589c75a": {
+    "exportedAs": "TabsComponent",
+    "from": "/src/components/tabs.jsx",
+    "default": true
   },
   "b33ea2f1_1d61_474a_a959_f3eef0f6f124": {
     "exportedAs": "directoryMoveFileUpdate",
@@ -1080,6 +1105,11 @@ const entityDetails = {
     "exportedAs": "projectDownloadFileRetrieve",
     "from": "/src/services/Breeze API/project.jsx",
     "default": false
+  },
+  "edd46fc1_5a99_48c1_a29f_7f4b8aefd3d6": {
+    "exportedAs": "Testxx",
+    "from": "/src/comptry/TestXX.jsx",
+    "default": true
   },
   "ef60b291_1c67_48e9_b7e3_6cc02d6fc89c": {
     "exportedAs": "Row",

@@ -17,6 +17,7 @@ export const OverlayRenderer = ({
       el.style.height = "10px";
     }
   }
+  // console.log(props)
 
   return (
     <>
@@ -102,7 +103,6 @@ OverlayRenderer.propTypes = {
   drag: PropTypes.func.isRequired,
   zbase: PropTypes.number.isRequired,
   itemId: PropTypes.string.isRequired,
-  id: PropTypes.string.isRequired,
 };
 
 OverlayPill.propTypes = {

@@ -1,13 +1,14 @@
 import { ChakraProvider } from "@chakra-ui/react";
 import { Outlet } from "react-router-dom";
 import { ThemeProvider } from "/src/context/ThemeContext.jsx";
+import TabsComponent from "/src/components/tabs";
 const App = () => {
   return (
-    <ChakraProvider children={undefined} value={undefined}>
+    // <ChakraProvider children={undefined} value={undefined}>
       <ThemeProvider>
-        <Outlet />
+        <TabsComponent />
       </ThemeProvider>
-    </ChakraProvider>
+    // </ChakraProvider>
   );
 };
 export default App;

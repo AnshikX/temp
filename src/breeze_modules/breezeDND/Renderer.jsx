@@ -35,7 +35,7 @@ const Renderer = ({
   zbase = 0,
   parentId,
 }) => {
-  const { visibilityState, hoveredItemId } = useVisibility();
+    const { visibilityState, hoveredItemId } = useVisibility();
   const { setSelectedItemId } = useSetters();
 
   const selectedItemId = useSelectedItemId();
@@ -118,6 +118,16 @@ const Renderer = ({
     addSibling(newItem, 1);
     // setSelectedItemId(newItem.id);
   }, [addSibling, item]);
+
+  const selectParent = useCallback(
+    (e) => {
+      e?.stopPropagation();
+      if (parentId) {
+        setSelectedItemId(parentId);
+      }
+    },
+    [parentId, setSelectedItemId]
+  );
 
   useEffect(() => {
     const func = (data) => {
@@ -225,6 +235,7 @@ const Renderer = ({
           isFirst={isFirst}
           overDetails={overDetails}
           onDuplicate={handleDuplicate}
+          selectParent={selectParent}
         />
       )}
     </>
