@@ -225,6 +225,7 @@ const SwitchRenderer = ({
     {
       ...normalizedAttributes,
       ...nulledEventAttrs,
+      ...(item.tagName === "input" ? { readOnly: true } : {}),
       style: {
         ...item.appliedStyles,
         opacity,
