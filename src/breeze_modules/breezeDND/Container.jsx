@@ -1,11 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import SideBarItem from "./sidebars/SideBarItem";
-// import Renderer from "./Renderer";
 import "./styles/Container.css";
 import { useSetters } from "./contexts/SelectionContext";
-// import { useUndoRedo } from "./contexts/UndoRedoContext";
-import undoButton from "./assets/svgs/undo-button.svg";
-import redoButton from "./assets/svgs/redo-button.svg";
 import Layers from "./sidebars/Layers";
 import SidebarNavItem from "./sidebars/SidebarNavItem";
 import { useMetaConfig } from "./contexts/MetaConfigContext";
@@ -24,11 +20,11 @@ const Container = () => {
   const [activeSidebarView, setActiveSidebarView] = useState("layers");
   const [isPreview, setIsPreview] = useState(false);
   const [compName, setCompName] = useState(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
-  // const { pushChanges } = usePushChanges();
   const { setSelectedItemId } = useSetters();
   const { setFullMetaConfig } = useMetaConfig();
-  // const { undoChanges, redoChanges, undoStack, redoStack } = useUndoRedo();
   const trigger = useState(0)[1];
 
   const isResizingRef = useRef(false);
@@ -102,11 +98,6 @@ const Container = () => {
     };
   }, []);
 
-  // const setConfig = useCallback((conf) => {
-  //   asClient?.sendEvent("CUSTOM_CONFIG", { customConfig: conf });
-  //   config.current = conf;
-  // }, []);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -127,48 +118,6 @@ const Container = () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, [setSelectedItemId]);
-
-  // const updateNodeById = useCallback((tree, nodeId, updates) => {
-  //   if (!tree) return tree;
-  //   if (tree.id === nodeId) {
-  //     return { ...tree, ...updates };
-  //   }
-
-  //   let updatedChildren = tree.children?.map((child) =>
-  //     updateNodeById(child, nodeId, updates)
-  //   );
-
-  //   return {
-  //     ...tree,
-  //     ...(updatedChildren ? { children: updatedChildren } : {}),
-  //     ...(tree.elementType === "CONDITIONAL"
-  //       ? {
-  //           trueCase: updateNodeById(tree.trueCase, nodeId, updates),
-  //           falseCase: updateNodeById(tree.falseCase, nodeId, updates),
-  //         }
-  //       : {}),
-  //   };
-  // }, []);
-
-  // const deleteNodeById = (tree, nodeId) => {
-  //   if (!tree) return null;
-  //   if (tree.id === nodeId) return null;
-
-  //   let newChildren = tree.children
-  //     ?.map((child) => deleteNodeById(child, nodeId))
-  //     .filter(Boolean);
-
-  //   return {
-  //     ...tree,
-  //     ...(newChildren ? { children: newChildren } : {}),
-  //     ...(tree.elementType === "CONDITIONAL"
-  //       ? {
-  //           trueCase: deleteNodeById(tree.trueCase, nodeId),
-  //           falseCase: deleteNodeById(tree.falseCase, nodeId),
-  //         }
-  //       : {}),
-  //   };
-  // };
 
   useEffect(() => {
     const func = (item) => {
@@ -194,6 +143,19 @@ const Container = () => {
       asClient.off("updateItemConfig", func);
       asFrameHost.removeHandler("FETCH_CONFIG");
       asClient.removeHandler("widgetConfig", func3);
+    };
+  }, []);
+
+  useEffect(() => {
+    asFrameHost.on("UNDO_REDO_STATUS", ({ canUndo, canRedo }) => {
+      setCanUndo(canUndo);
+      setCanRedo(canRedo);
+    });
+    return () => {
+      asFrameHost.off("UNDO_REDO_STATUS", ({ canUndo, canRedo }) => {
+        setCanUndo(canUndo);
+        setCanRedo(canRedo);
+      });
     };
   }, []);
 
@@ -306,21 +268,38 @@ const Container = () => {
           className="brDnd-shortcutBar brDnd-background-secondary brDnd-color-text"
           id="toolBar"
         >
-          <div className={`${isPreview ? "brDnd-hidden" : ""} d-flex`}>
-            <span
-              // onClick={undoChanges}
-              className="mx-2"
-              // disabled={undoStack.length === 0}
+          <div
+            className={`${
+              isPreview ? "brDnd-hidden" : ""
+            } d-flex align-items-center`}
+          >
+            {/* Undo */}
+            <div
+              onClick={() => canUndo && asFrameHost.sendEvent("UNDO_CHANGES")}
+              className={`mx-2 ${canUndo ? "text-primary" : "text-secondary"}`}
+              style={{
+                cursor: canUndo ? "pointer" : "not-allowed",
+                opacity: canUndo ? 1 : 0.5,
+                fontSize: "1.5rem",
+              }}
             >
-              <img src={undoButton} alt="undo" />
-            </span>
-            <span 
-            // onClick={redoChanges}
-            //  disabled={redoStack.length === 0}
-             >
-              <img src={redoButton} alt="redo" />
-            </span>
+              <i className="bi bi-arrow-counterclockwise"></i>
+            </div>
+
+            {/* Redo */}
+            <div
+              onClick={() => canRedo && asFrameHost.sendEvent("REDO_CHANGES")}
+              className={`mx-2 ${canRedo ? "text-success" : "text-secondary"}`}
+              style={{
+                cursor: canRedo ? "pointer" : "not-allowed",
+                opacity: canRedo ? 1 : 0.5,
+                fontSize: "1.5rem",
+              }}
+            >
+              <i className="bi bi-arrow-clockwise"></i>
+            </div>
           </div>
+
           <div className="brDnd-toggleButtonContainer">
             <button
               className="brDnd-toggleButton"
@@ -336,12 +315,6 @@ const Container = () => {
         </div>
         <div className="brDnd-page" id="page">
           {config.current && config.current.elementType ? (
-            // <Renderer
-            //   item={config.current}
-            //   heirarchy={[config.current.id]}
-            //   isPreview={isPreview}
-            //   updateItem={setConfig}
-            // />
             <iframe
               src="/breeze/renderer-frame"
               id="config-renderer-iframe"
