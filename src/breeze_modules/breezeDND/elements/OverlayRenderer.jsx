@@ -17,7 +17,6 @@ export const OverlayRenderer = ({
       el.style.height = "10px";
     }
   }
-  // console.log(props)
 
   return (
     <>

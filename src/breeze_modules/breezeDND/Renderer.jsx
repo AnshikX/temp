@@ -35,7 +35,7 @@ const Renderer = ({
   zbase = 0,
   parentId,
 }) => {
-    const { visibilityState, hoveredItemId } = useVisibility();
+  const { visibilityState, hoveredItemId } = useVisibility();
   const { setSelectedItemId } = useSetters();
 
   const selectedItemId = useSelectedItemId();

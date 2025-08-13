@@ -1,11 +1,5 @@
 import { React } from "react";
 const Sdfgh = () => {
-  return (
-    <div className={"row"}>
-      Hello world
-      <input />
-      <input />
-    </div>
-  );
+  return <div className={""}>Hello world</div>;
 };
 export default Sdfgh;

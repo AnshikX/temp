@@ -197,6 +197,7 @@ const CombinedRenderer = ({
   const appliedStyles = useMemo(() => {
     return { ...processedAttributes.style, opacity };
   }, [processedAttributes, opacity]);
+
   return (
     <SwitchRenderer
       item={{ ...currentItem, appliedStyles }}
@@ -211,25 +212,20 @@ const CombinedRenderer = ({
       {currentItem.children?.map((child, index) => {
         const prevId = index > 0 ? currentItem.children[index - 1].id : null;
         return (
-          
-          
-            <Renderer
-
-              key={child?.id}
-              item={child}
-              prevId={prevId}
-              updateItem={updateChild}
-              addSibling={(newChild, offset) =>
-                addChild(newChild, offset, index)
-              }
-              heirarchy={[...stableHeirarchy, child.id]}
-              isFirst={false}
-              isPreview={isPreview}
-              handleDelete={() => removeChild(child.id)}
-              zbase={zbase + 20}
-              parentId={currentItem.id}
-            />
-          );
+          <Renderer
+            key={child?.id}
+            item={child}
+            prevId={prevId}
+            updateItem={updateChild}
+            addSibling={(newChild, offset) => addChild(newChild, offset, index)}
+            heirarchy={[...stableHeirarchy, child.id]}
+            isFirst={false}
+            isPreview={isPreview}
+            handleDelete={() => removeChild(child.id)}
+            zbase={zbase + 20}
+            parentId={currentItem.id}
+          />
+        );
       })}
       {!isPreview && currentItem.children ? (
         currentItem.children.length === 0 ? (

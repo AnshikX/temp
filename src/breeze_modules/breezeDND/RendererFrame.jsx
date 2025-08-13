@@ -22,7 +22,7 @@ export default function RendererFrame() {
     asFrameClient.on("TOGGLE_PREVIEW", handleTogglePreview);
     asFrameClient.on("RESET_PREVIEW", handleTogglePreview);
   }, [isPreview]);
-  // console.log(config.current);
+  console.log(config.current);
 
   useEffect(() => {
     asFrameClient.sendRequest("config").then((newTree) => {
