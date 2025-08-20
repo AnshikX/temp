@@ -225,11 +225,6 @@ const SideBarItem = ({ sidebarItems }) => {
                         className="inline ml-2"
                         alt="toggle"
                       />
-                      <img
-                        src={expandedLibs[libName] ? upArrow : downArrow}
-                        className="inline ml-2"
-                        alt="toggle"
-                      />
                     </div>
                     {expandedLibs[libName] && (
                       <div className="ml-4">
