@@ -3,14 +3,16 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { DndProvider } from "react-dnd";
 import { SelectionProvider } from "./contexts/SelectionContext.jsx";
 import { VisibilityProvider } from "./contexts/VisibilityContext.jsx";
+// import { MapProvider } from "./contexts/MapContext.jsx";
 import { UndoRedoProvider } from "./contexts/UndoRedoContext.jsx";
 import { MetaConfigProvider } from "./contexts/MetaConfigContext.jsx";
 
 export default function DNDRoot() {
   return (
     <>
-      <UndoRedoProvider>
-        <MetaConfigProvider renderMode="HOST">
+      <UndoRedoProvider renderMode="HOST">
+        {/* <MapProvider> */}
+          <MetaConfigProvider renderMode="HOST">
           <VisibilityProvider renderMode="HOST">
             <SelectionProvider renderMode="HOST">
               <DndProvider backend={HTML5Backend}>
@@ -18,7 +20,8 @@ export default function DNDRoot() {
               </DndProvider>
             </SelectionProvider>
           </VisibilityProvider>
-        </MetaConfigProvider>
+          </MetaConfigProvider>
+        {/* </MapProvider> */}
       </UndoRedoProvider>
     </>
   );

@@ -7,17 +7,22 @@ import {
   useState,
 } from "react";
 import PropTypes from "prop-types";
-import { asFrameClient } from "../postMessageBridge";
+import { asFrameClient, asFrameHost } from "../postMessageBridge";
 
 const UndoRedoContext = createContext();
 const PushChangesContext = createContext();
 
-export const UndoRedoProvider = ({ children }) => {
+export const UndoRedoProvider = ({ children, renderMode }) => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const undidChanges = useRef(false);
   const reDidChanges = useRef(false);
   const sequenceRef = useRef(0);
+
+  const syncing = useRef({
+    undoStack: [],
+    redoStack: [],
+  });
 
   const pushChanges = useCallback((changeDetails) => {
     changeDetails.sequence = sequenceRef.current;
@@ -82,21 +87,38 @@ export const UndoRedoProvider = ({ children }) => {
   // Bump sequence once per render
   sequenceRef.current += 1;
 
-  useEffect(() => {
-    asFrameClient.sendEvent("UNDO_REDO_STATUS", {
-      canUndo: undoStack.length > 0,
-      canRedo: redoStack.length > 0,
-    });
-  }, [undoStack.length, redoStack.length]);
+  // useEffect(() => {
+  //   const msg = ["SYNC_UNDO_REDO", { undoStack, redoStack }];
 
-  useEffect(() => {
-    asFrameClient.on("UNDO_CHANGES", undoChanges);
-    asFrameClient.on("REDO_CHANGES", redoChanges);
-    return () => {
-      asFrameClient.off("UNDO_CHANGES", undoChanges);
-      asFrameClient.off("REDO_CHANGES", redoChanges);
-    };
-  }, [undoChanges, redoChanges]);
+  //   const sameUndo = syncing.current.undoStack === undoStack;
+  //   const sameRedo = syncing.current.redoStack === redoStack;
+
+  //   if (!sameUndo || !sameRedo) {
+  //     syncing.current.undoStack = undoStack;
+  //     syncing.current.redoStack = redoStack;
+
+  //     (renderMode === "HOST" ? asFrameHost : asFrameClient).sendRequest(...msg);
+  //   }
+  // }, [undoStack, redoStack, renderMode]);
+
+  // useEffect(() => {
+  //   let messageBridge;
+  //   messageBridge = renderMode === "CLIENT" ? asFrameClient : asFrameHost;
+
+  //   messageBridge.registerHandler(
+  //     "SYNC_UNDO_REDO",
+  //     ({ undoStack, redoStack }) => {
+  //       syncing.current.undoStack = undoStack;
+  //       syncing.current.redoStack = redoStack;
+  //       setUndoStack(undoStack);
+  //       setRedoStack(redoStack);
+  //     }
+  //   );
+
+  //   return () => {
+  //     messageBridge.removeHandler("SYNC_UNDO_REDO");
+  //   };
+  // }, [renderMode]);
 
   return (
     <PushChangesContext.Provider value={{ pushChanges }}>
@@ -111,6 +133,7 @@ export const UndoRedoProvider = ({ children }) => {
 
 UndoRedoProvider.propTypes = {
   children: PropTypes.node.isRequired,
+  renderMode: PropTypes.oneOf(["HOST", "CLIENT"]).isRequired,
 };
 
 export const useUndoRedo = () => useContext(UndoRedoContext);
