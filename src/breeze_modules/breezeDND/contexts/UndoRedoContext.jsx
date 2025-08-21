@@ -85,7 +85,7 @@ export const UndoRedoProvider = ({ children, renderMode }) => {
   }, []);
 
   // Bump sequence once per render
-  sequenceRef.current += 1;
+  sequenceRef.current += 2;
 
   // useEffect(() => {
   //   const msg = ["SYNC_UNDO_REDO", { undoStack, redoStack }];
