@@ -7,51 +7,58 @@ import {
   useState,
 } from "react";
 import PropTypes from "prop-types";
-import { asFrameClient, asFrameHost } from "../postMessageBridge";
+import { asFrameClient } from "../postMessageBridge";
 
 const UndoRedoContext = createContext();
 const PushChangesContext = createContext();
 
-export const UndoRedoProvider = ({ children, renderMode }) => {
+export const UndoRedoProvider = ({ children }) => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
-  const undidChanges = useRef(false);
-  const reDidChanges = useRef(false);
+  const undidChanges = useRef(0);
+  const reDidChanges = useRef(0);
   const sequenceRef = useRef(0);
 
-  const syncing = useRef({
-    undoStack: [],
-    redoStack: [],
-  });
+  console.log("SQUENCE", sequenceRef.current);
+  console.log("UNDO", undoStack);
+  console.log("REDO", redoStack);
 
   const pushChanges = useCallback((changeDetails) => {
     changeDetails.sequence = sequenceRef.current;
+    // if (changeDetails.sequence === null) {
+    //   changeDetails.sequence = sequenceRef.current;
+    // }
 
-    if (undidChanges.current) {
-      setTimeout(() => {
-        undidChanges.current = false;
-      }, 0);
+    console.log(undidChanges.current);
+    if (undidChanges.current > 0) {
+      undidChanges.current--;
       setRedoStack((prev) => [...prev, changeDetails]);
     } else {
       setUndoStack((prevStack) => [...prevStack, changeDetails]);
-      if (!reDidChanges.current) {
-        setTimeout(() => {
-          reDidChanges.current = false;
-        }, 0);
+      console.log(reDidChanges.current);
+      if (reDidChanges.current > 0) {
+        reDidChanges.current--;
+      } else {
         setRedoStack([]);
       }
     }
   }, []);
 
   const undoChanges = useCallback(() => {
-    undidChanges.current = true;
+    sequenceRef.current++;
 
     setUndoStack((prevStack) => {
       if (prevStack.length === 0) return prevStack;
-
       const newStack = [...prevStack];
+
       const changeDetails = newStack.pop();
+      undidChanges.current =
+        newStack.filter((item) => item.sequence === changeDetails.sequence)
+          .length + 1;
+
       changeDetails.doChanges();
+
+      console.log(undidChanges.current);
 
       while (
         newStack.length > 0 &&
@@ -65,11 +72,17 @@ export const UndoRedoProvider = ({ children, renderMode }) => {
   }, []);
 
   const redoChanges = useCallback(() => {
+    sequenceRef.current++;
     setRedoStack((prevStack) => {
       if (prevStack.length === 0) return prevStack;
 
       const newStack = [...prevStack];
       const changeDetails = newStack.pop();
+
+      reDidChanges.current =
+        newStack.filter((item) => item.sequence === changeDetails.sequence)
+          .length + 1;
+
       changeDetails.doChanges();
 
       while (
@@ -81,47 +94,37 @@ export const UndoRedoProvider = ({ children, renderMode }) => {
       }
       return newStack;
     });
-    reDidChanges.current = true;
+    // reDidChanges.current = true;
+  }, []);
+
+  // 🔑 helper for grouping multiple changes
+  const withGroupedChanges = useCallback((fn) => {
+    const currentSeq = ++sequenceRef.current;
+    fn(currentSeq); // pass the sequence in case child functions need it
+    // do NOT bump sequence here, let provider bump once per render
   }, []);
 
   // Bump sequence once per render
-  sequenceRef.current += 2;
+  // sequenceRef.current += 1;
 
-  // useEffect(() => {
-  //   const msg = ["SYNC_UNDO_REDO", { undoStack, redoStack }];
+  useEffect(() => {
+    asFrameClient.sendEvent("UNDO_REDO_STATUS", {
+      canUndo: undoStack.length > 0,
+      canRedo: redoStack.length > 0,
+    });
+  }, [undoStack.length, redoStack.length]);
 
-  //   const sameUndo = syncing.current.undoStack === undoStack;
-  //   const sameRedo = syncing.current.redoStack === redoStack;
-
-  //   if (!sameUndo || !sameRedo) {
-  //     syncing.current.undoStack = undoStack;
-  //     syncing.current.redoStack = redoStack;
-
-  //     (renderMode === "HOST" ? asFrameHost : asFrameClient).sendRequest(...msg);
-  //   }
-  // }, [undoStack, redoStack, renderMode]);
-
-  // useEffect(() => {
-  //   let messageBridge;
-  //   messageBridge = renderMode === "CLIENT" ? asFrameClient : asFrameHost;
-
-  //   messageBridge.registerHandler(
-  //     "SYNC_UNDO_REDO",
-  //     ({ undoStack, redoStack }) => {
-  //       syncing.current.undoStack = undoStack;
-  //       syncing.current.redoStack = redoStack;
-  //       setUndoStack(undoStack);
-  //       setRedoStack(redoStack);
-  //     }
-  //   );
-
-  //   return () => {
-  //     messageBridge.removeHandler("SYNC_UNDO_REDO");
-  //   };
-  // }, [renderMode]);
+  useEffect(() => {
+    asFrameClient.on("UNDO_CHANGES", undoChanges);
+    asFrameClient.on("REDO_CHANGES", redoChanges);
+    return () => {
+      asFrameClient.off("UNDO_CHANGES", undoChanges);
+      asFrameClient.off("REDO_CHANGES", redoChanges);
+    };
+  }, [undoChanges, redoChanges]);
 
   return (
-    <PushChangesContext.Provider value={{ pushChanges }}>
+    <PushChangesContext.Provider value={{ pushChanges, withGroupedChanges }}>
       <UndoRedoContext.Provider
         value={{ undoChanges, redoChanges, undoStack, redoStack }}
       >
@@ -133,7 +136,6 @@ export const UndoRedoProvider = ({ children, renderMode }) => {
 
 UndoRedoProvider.propTypes = {
   children: PropTypes.node.isRequired,
-  renderMode: PropTypes.oneOf(["HOST", "CLIENT"]).isRequired,
 };
 
 export const useUndoRedo = () => useContext(UndoRedoContext);
