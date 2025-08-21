@@ -97,7 +97,6 @@ export const UndoRedoProvider = ({ children }) => {
     // reDidChanges.current = true;
   }, []);
 
-  // 🔑 helper for grouping multiple changes
   const withGroupedChanges = useCallback((fn) => {
     const currentSeq = ++sequenceRef.current;
     fn(currentSeq); // pass the sequence in case child functions need it
