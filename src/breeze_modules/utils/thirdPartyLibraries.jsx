@@ -5,17 +5,13 @@ import * as react from "react";
 import * as react_dom from "react-dom";
 import * as react_dnd from "react-dnd";
 import * as react_dnd_html5_backend from "react-dnd-html5-backend";
-import * as uuid from "uuid";
-import * as tailwindcss from "tailwindcss";
-import * as mui_private_theming from "@mui/private-theming";
-import * as _3d_force_graph from "3d-force-graph";
 import * as react_error_boundary from "react-error-boundary";
+import * as uuid from "uuid";
+import * as breeze_ui_comp_library from "@breeze/ui-comp-library";
 import * as react_bootstrap from "react-bootstrap";
-import * as mui_material from "@mui/material";
-import * as emotion_styled from "@emotion/styled";
+import * as tailwindcss from "tailwindcss";
+import * as chart_js from "chart.js";
 import * as react_chartjs_2 from "react-chartjs-2";
-import * as antd from "antd";
-import * as chakra_ui_react from "@chakra-ui/react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 
@@ -27,15 +23,11 @@ export const libraries = {
     "react-dom": react_dom,
     "react-dnd": react_dnd,
     "react-dnd-html5-backend": react_dnd_html5_backend,
-    "uuid": uuid,
-    "tailwindcss": tailwindcss,
-    "@mui/private-theming": mui_private_theming,
-    "3d-force-graph": _3d_force_graph,
     "react-error-boundary": react_error_boundary,
+    "uuid": uuid,
+    "@breeze/ui-comp-library": breeze_ui_comp_library,
     "react-bootstrap": react_bootstrap,
-    "@mui/material": mui_material,
-    "@emotion/styled": emotion_styled,
-    "react-chartjs-2": react_chartjs_2,
-    "antd": antd,
-    "@chakra-ui/react": chakra_ui_react
+    "tailwindcss": tailwindcss,
+    "chart.js": chart_js,
+    "react-chartjs-2": react_chartjs_2
 };
