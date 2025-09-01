@@ -13,7 +13,7 @@ const filterItems = (items, searchQuery) => {
   );
 };
 
-const SideBarItem = ({ sidebarItems, isTemplateView }) => {
+const SideBarItem = ({ sidebarItems }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedLibs, setExpandedLibs] = useState({});
   const [libComponents, setLibComponents] = useState({});
@@ -168,14 +168,11 @@ const SideBarItem = ({ sidebarItems, isTemplateView }) => {
           open={openSections.html}
           items={filteredHtmlItems}
         />
-
-        {!isTemplateView && (
-          <SidebarSection
-            title="Components"
-            open={openSections.components}
-            items={filteredComponents}
-          />
-        )}
+        <SidebarSection
+          title="Components"
+          open={openSections.components}
+          items={filteredComponents}
+        />
 
         <div
           className="mb-2 accordion-item brDnd-background-primary brDnd-color-text"
@@ -303,14 +300,11 @@ const SideBarItem = ({ sidebarItems, isTemplateView }) => {
           </div>
         </div>
 
-        {!isTemplateView && (
-          <SidebarSection
-            title="Widget Elements"
-            open={openSections.widgets}
-            items={filteredWidgets}
-          />
-        )}
-
+        <SidebarSection
+          title="Widget Elements"
+          open={openSections.widgets}
+          items={filteredWidgets}
+        />
         <SidebarSection
           title="Breeze Components"
           open={openSections.breeze_components}

@@ -32,7 +32,6 @@ const Container = () => {
   const pageContainerRef = useRef(null);
   const sidebarWidthRef = useRef(250);
   const iframe2Ref = useRef(null);
-  const [templateView, setTemplateView] = useState(false)
 
   // Initialize asClient and handle incoming messages
   useEffect(() => {
@@ -53,7 +52,6 @@ const Container = () => {
 
         if (sidebar) {
           setSidebarItems(sidebar.sidebarItems);
-          setTemplateView(sidebar.isTemplateConfig)
         }
 
         if (theme) {
@@ -237,7 +235,6 @@ const Container = () => {
                 sidebarItems={sidebarItems}
                 shouldAnimateSidebar={shouldAnimateSidebar}
                 isResizingRef={isResizingRef}
-                isTemplateView={templateView}
               />
             ) : (
               <div className="p-2">
