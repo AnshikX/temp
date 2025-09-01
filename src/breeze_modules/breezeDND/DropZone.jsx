@@ -60,12 +60,17 @@ const DropZone = ({
 
       // Case 2: WIDGET — fetch widget config and call onDrop with config
       else if (data?.item.elementType === "WIDGET") {
-        asFrameClient.on("widgetConfig", (config) => {
-          onDrop(config);
-          asFrameClient.off("widgetConfig");
-        });
+        // asFrameClient.on("widgetConfig", (config) => {
+        //   onDrop(config);
+        //   asFrameClient.off("widgetConfig");
+        // });
         console.log("Sending FETCH_CONFIG to Breeze", data.item);
-        asFrameClient.sendRequest("FETCH_CONFIG", data.item);
+        try {
+          const widgetConfig = asFrameClient.sendRequest("FETCH_CONFIG", {
+            widgetConfig: data.item,
+          });
+          onDrop(widgetConfig);
+        } finally { /* empty */ }
       }
       // Case 3: Default — call onDrop directly
       else {

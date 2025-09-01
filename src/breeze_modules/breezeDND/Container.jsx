@@ -125,8 +125,8 @@ const Container = () => {
       console.log(item);
     };
 
-    const func2 = async (item) => {
-      return await asClient.sendRequest("FETCH_CONFIG", item);
+    const func2 = async (request) => {
+      return await asClient.sendRequest("FETCH_CONFIG", request);
     };
 
     const func3 = (config) => {
