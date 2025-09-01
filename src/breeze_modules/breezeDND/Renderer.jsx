@@ -12,8 +12,6 @@ import { useCustomDrag } from "./dragndropUtils/useCustomDrag";
 import deepCopy from "../utils/deepcopy";
 import { v4 as uuidv4 } from "uuid";
 import { asFrameClient } from "./postMessageBridge";
-import { usePushChanges } from "./contexts/UndoRedoContext";
-
 
 function assignNewIdsRecursively(item) {
   const newItem = { ...item, id: uuidv4() };
@@ -46,8 +44,6 @@ const Renderer = ({
   const firstDropZoneHeriarchy = [...heirarchy];
   const isSelected = selectedItemId === item.id;
 
-  const { withGroupedChanges } = usePushChanges();
-  
   const [{ isDragging }, drag] = useCustomDrag(
     {
       type: "HTML",
@@ -117,14 +113,9 @@ const Renderer = ({
 
     const copied = deepCopy(item);
     const newItem = assignNewIdsRecursively(copied);
-    newItem.label = `${item.label || item.tagName || item.elementType}`;
+    newItem.label = `${item.label || item.tagName || item.elementType} (Copy)`;
 
-    
-    
-    withGroupedChanges(() => {
     addSibling(newItem, 1);
-  });
-
     // setSelectedItemId(newItem.id);
   }, [addSibling, item]);
 
