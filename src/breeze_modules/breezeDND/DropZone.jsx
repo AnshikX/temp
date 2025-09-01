@@ -5,11 +5,7 @@ import { useVisibility } from "./contexts/VisibilityContext";
 import { asFrameClient } from "./postMessageBridge";
 import { useCustomDrop } from "./dragndropUtils/useCustomDrop";
 import { dragState } from "./dragndropUtils/dragState";
-import {
-  getDragHandler,
-  removeDragHandler,
-} from "./dragndropUtils/dragFunctionRegistry";
-import { usePushChanges } from "./contexts/UndoRedoContext";
+import { getDragHandler, removeDragHandler } from "./dragndropUtils/dragFunctionRegistry";
 
 const dropzoneRegistry = new Set();
 
@@ -22,7 +18,7 @@ function distanceToRect(x, y, rect) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 const DropZone = ({
   onDrop,
@@ -34,7 +30,7 @@ const DropZone = ({
 }) => {
   const dropZoneRef = useRef();
   const { setHoveredItemId } = useVisibility();
-  const { withGroupedChanges } = usePushChanges();
+
   const drop = useCustomDrop({
     onDrop: async (data) => {
       await sleep(0);
@@ -42,22 +38,11 @@ const DropZone = ({
       if (data?.dragId) {
         const fn = getDragHandler(data.dragId);
         if (fn) {
-          if (data.item.origin === "renderer") {
-            // Move within renderer
-            withGroupedChanges(() => {
-              data.item?.remove();
-              fn(data.item);
-            });
-          } else {
-            // Fresh add (sidebar → renderer using handler)
-            withGroupedChanges(() => fn(data.item));
-            // fn(data.item);
-          }
+          fn(data.item); // pass the payload
           removeDragHandler(data.dragId);
           return;
         }
       }
-
       // Case 2: WIDGET — fetch widget config and call onDrop with config
       else if (data?.item.elementType === "WIDGET") {
         asFrameClient.on("widgetConfig", (config) => {
@@ -69,15 +54,7 @@ const DropZone = ({
       }
       // Case 3: Default — call onDrop directly
       else {
-        if (data.origin === "renderer") {
-          withGroupedChanges(() => {
-            data.remove();
-            onDrop(data.item);
-          });
-        } else {
-          withGroupedChanges(() => onDrop(data.item));
-          // onDrop(data.item);
-        }
+        onDrop(data.item);
       }
 
       // Clean up dropzone visuals
@@ -92,12 +69,12 @@ const DropZone = ({
 
   // const { isDragging, item } = useDragLayer((monitor) => ({
   //   isDragging: monitor.isDragging(),
-  //   item: monitor.getItem(),
+  //   item: monitor.getItem(), 
   // }));
   const [isDragging, setIsDragging] = useState(dragState.get().isDragging);
   const [dragItem, setDragItem] = useState(dragState.get().data?.item ?? null);
 
-  useEffect(() => {
+useEffect(() => {
     // The subscribe function returns an unsubscribe function for cleanup
     const unsubscribe = dragState.subscribe((newState) => {
       setIsDragging(newState.isDragging);
@@ -107,6 +84,7 @@ const DropZone = ({
     // Cleanup on unmount
     return unsubscribe;
   }, []); // Empty array ensures this runs only on mount and unmount
+
 
   useEffect(() => {
     const el = dropZoneRef.current;
@@ -204,8 +182,7 @@ const DropZone = ({
 
         const distances = [];
         dropzoneRegistry.forEach(({ el, heirarchy }) => {
-          if (dragItem?.item?.id && heirarchy?.includes(dragItem.item.id))
-            return;
+          if (dragItem?.item?.id && heirarchy?.includes(dragItem.item.id)) return;
           const rect = el.getBoundingClientRect();
           const dist = distanceToRect(cursorX, cursorY, rect);
           distances.push({ el, dist, rect });
