@@ -15,38 +15,50 @@ const PushChangesContext = createContext();
 export const UndoRedoProvider = ({ children }) => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
-  const undidChanges = useRef(false);
-  const reDidChanges = useRef(false);
+  const undidChanges = useRef(0);
+  const reDidChanges = useRef(0);
   const sequenceRef = useRef(0);
+
+  console.log("SQUENCE", sequenceRef.current);
+  console.log("UNDO", undoStack);
+  console.log("REDO", redoStack);
 
   const pushChanges = useCallback((changeDetails) => {
     changeDetails.sequence = sequenceRef.current;
+    // if (changeDetails.sequence === null) {
+    //   changeDetails.sequence = sequenceRef.current;
+    // }
 
-    if (undidChanges.current) {
-      setTimeout(() => {
-        undidChanges.current = false;
-      }, 0);
+    console.log(undidChanges.current);
+    if (undidChanges.current > 0) {
+      undidChanges.current--;
       setRedoStack((prev) => [...prev, changeDetails]);
     } else {
       setUndoStack((prevStack) => [...prevStack, changeDetails]);
-      if (!reDidChanges.current) {
-        setTimeout(() => {
-          reDidChanges.current = false;
-        }, 0);
+      console.log(reDidChanges.current);
+      if (reDidChanges.current > 0) {
+        reDidChanges.current--;
+      } else {
         setRedoStack([]);
       }
     }
   }, []);
 
   const undoChanges = useCallback(() => {
-    undidChanges.current = true;
+    sequenceRef.current++;
 
     setUndoStack((prevStack) => {
       if (prevStack.length === 0) return prevStack;
-
       const newStack = [...prevStack];
+
       const changeDetails = newStack.pop();
+      undidChanges.current =
+        newStack.filter((item) => item.sequence === changeDetails.sequence)
+          .length + 1;
+
       changeDetails.doChanges();
+
+      console.log(undidChanges.current);
 
       while (
         newStack.length > 0 &&
@@ -60,11 +72,17 @@ export const UndoRedoProvider = ({ children }) => {
   }, []);
 
   const redoChanges = useCallback(() => {
+    sequenceRef.current++;
     setRedoStack((prevStack) => {
       if (prevStack.length === 0) return prevStack;
 
       const newStack = [...prevStack];
       const changeDetails = newStack.pop();
+
+      reDidChanges.current =
+        newStack.filter((item) => item.sequence === changeDetails.sequence)
+          .length + 1;
+
       changeDetails.doChanges();
 
       while (
@@ -76,11 +94,17 @@ export const UndoRedoProvider = ({ children }) => {
       }
       return newStack;
     });
-    reDidChanges.current = true;
+    // reDidChanges.current = true;
+  }, []);
+
+  const withGroupedChanges = useCallback((fn) => {
+    const currentSeq = ++sequenceRef.current;
+    fn(currentSeq); // pass the sequence in case child functions need it
+    // do NOT bump sequence here, let provider bump once per render
   }, []);
 
   // Bump sequence once per render
-  sequenceRef.current += 1;
+  // sequenceRef.current += 1;
 
   useEffect(() => {
     asFrameClient.sendEvent("UNDO_REDO_STATUS", {
@@ -99,7 +123,7 @@ export const UndoRedoProvider = ({ children }) => {
   }, [undoChanges, redoChanges]);
 
   return (
-    <PushChangesContext.Provider value={{ pushChanges }}>
+    <PushChangesContext.Provider value={{ pushChanges, withGroupedChanges }}>
       <UndoRedoContext.Provider
         value={{ undoChanges, redoChanges, undoStack, redoStack }}
       >

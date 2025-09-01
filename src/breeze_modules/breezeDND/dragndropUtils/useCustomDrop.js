@@ -26,13 +26,20 @@ export function useCustomDrop({ onDrop }) {
 
       const data = dragState.get().data;
 
-      if (data?.onDrop) data.onDrop();
-      if (data?.item) onDrop(data.item);
-      if (data?.myOnDrop) data.myOnDrop();
-      else if (data?.item?.myOnDrop) {
-        data.item.myOnDrop();
+      // if (data?.onDrop) data.onDrop();
+      // if (data?.item) onDrop(data.item);
+      // // if (data?.myOnDrop) data.myOnDrop();
+      // else if (data?.item?.myOnDrop) {
+      //   data.item.myOnDrop();
+      // }
+      if (data?.onDrop) {
+        data.onDrop();
       }
-      
+      if (data?.item) {
+        // Pass the FULL payload, not just item
+        onDrop(data.item);
+      }
+
       dragState.set({ data: null, isDragging: false });
     };
 
