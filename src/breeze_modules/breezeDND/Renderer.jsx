@@ -47,7 +47,7 @@ const Renderer = ({
   const [{ isDragging }, drag] = useCustomDrag(
     {
       type: "HTML",
-      item: { item: { ...item }, myOnDrop: handleDelete },
+      item: { origin: "renderer", item: { ...item }, remove: handleDelete },
       canDrag: () => (handleDelete ? true : false),
       mode: "same-frame",
     }
