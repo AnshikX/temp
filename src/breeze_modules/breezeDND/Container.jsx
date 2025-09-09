@@ -32,7 +32,7 @@ const Container = () => {
   const pageContainerRef = useRef(null);
   const sidebarWidthRef = useRef(250);
   const iframe2Ref = useRef(null);
-  const [templateView, setTemplateView] = useState(false)
+  const [templateView, setTemplateView] = useState(false);
 
   // Initialize asClient and handle incoming messages
   useEffect(() => {
@@ -53,7 +53,7 @@ const Container = () => {
 
         if (sidebar) {
           setSidebarItems(sidebar.sidebarItems);
-          setTemplateView(sidebar.isTemplateConfig)
+          setTemplateView(sidebar.isTemplateConfig);
         }
 
         if (theme) {
@@ -133,18 +133,18 @@ const Container = () => {
 
     const func3 = (config) => {
       console.log("Received widgetConfig from Breeze", config);
-      asFrameHost.sendEvent("widgetConfig", config);
+      asFrameHost.sendEvent("widgetConfig", config.config);
     };
 
     asFrameHost.registerHandler("FETCH_CONFIG", func2);
 
     asClient.on("updateItemConfig", func);
-    asClient.registerHandler("widgetConfig", func3);
+    asClient.on("widgetConfig", func3);
 
     return () => {
       asClient.off("updateItemConfig", func);
       asFrameHost.removeHandler("FETCH_CONFIG");
-      asClient.removeHandler("widgetConfig", func3);
+      asClient.off("widgetConfig", func3);
     };
   }, []);
 
